@@ -20,7 +20,7 @@ Primul modul, în lucru: tracker de colecții personale (`services/collections-s
 | Client | iOS nativ, SwiftUI — neînceput |
 | IDE backend | VS Code + C# Dev Kit (nu Rider) |
 | Orchestrare locală | `docker-compose.yml` clasic în `infra/` (nu .NET Aspire) |
-| Gateway | YARP — decis, neînceput (`services/gateway/`) |
+| Gateway | YARP, `services/gateway/` — proiect single (fără Clean Architecture layers, nu are logică de business). Rutare prefixată cu numele serviciului (`/collections-service/{**catch-all}` → strip prefix → `collections-service`), ca să nu coliziune cu rutele viitoarelor servicii |
 | Git hosting + CI/CD | GitHub, repo public (runnere macOS gratuite nelimitat pentru iOS) |
 | Testare API | Postman, colecție unică `Project`, foldere per serviciu |
 
@@ -46,7 +46,7 @@ Primul modul, în lucru: tracker de colecții personale (`services/collections-s
 Project/
 ├── services/
 │   ├── collections-service/   (Clean Architecture, vezi mai jos)
-│   └── gateway/                (gol — YARP neînceput)
+│   └── gateway/                (Gateway.slnx, global.json, src/Gateway.Api/ — proiect single, YARP, fără Directory.Build.props/Packages.props încă, nu are sens cu un singur proiect/pachet)
 ├── ios/                        (gol)
 └── infra/
     ├── docker-compose.yml
@@ -70,7 +70,7 @@ Project/
 3. ~~Validare prin MediatR pipeline behavior~~ — făcut (2026-08-29): `ValidationBehavior<TRequest,TResponse>` (`Application/Common/Behaviors`) rulează toți validatorii FluentValidation înregistrați pentru o comandă înainte ca handler-ul să fie apelat; dacă eșuează, aruncă `FluentValidation.ValidationException`. `GlobalExceptionHandler` tratează special acest tip de excepție → 400 + `ValidationProblemDetails` cu erori pe câmp, în loc de 500 generic. Fiecare comandă care are nevoie de validare capătă un `<Comanda>Validator : AbstractValidator<Comanda>` lângă ea (ex. `CreateItemCommandValidator`), înregistrat automat prin `AddValidatorsFromAssembly`. Nu înlocuiește validarea din constructorul entității Domain (rămâne ca ultimă linie de apărare), doar prinde erorile mai devreme, cu mesaje structurate.
 4. ~~CRUD complet pentru `Item`~~ — făcut (2026-08-29): `List` (`GET /api/items?limit&offset`, paginat, `limit` plafonat 1-100 prin validator), `Update` (`PUT /api/items/{id}`, 204/404), `Delete` (`DELETE /api/items/{id}`, 204/404). Toate query-urile/comenzile filtrează după `OwnerId` din `ICurrentUserService` — inclusiv `GetById`, care înainte era global. Un item al altui user nu există din perspectiva ta (404, nu 403). `IItemRepository` are `GetByIdAsync` (citire, NoTracking implicit) separat de `GetTrackedByIdAsync` (`.AsTracking()` explicit, folosit doar de `Update`/`Delete`, care chiar mută entitatea). `Item` capătă `UpdateDetails(...)` în Domain (validare comună extrasă în `EnsureValid`, refolosită de constructor).
 5. ~~Entitatea `Collection`~~ — făcut (2026-08-29): `Collection` (Domain: `Id`, `Name`, `OwnerId`) cu CRUD complet (`api/collections`), identic ca pattern cu `Item`. `Item.CollectionId` (int?, nullabil — un item poate fi necategorizat) e FK către `Collection`, configurat explicit în `CollectionsDbContext.OnModelCreating` (fără proprietăți de navigare pe niciuna din entități — relația se declară doar prin `HasForeignKey`), cu `OnDelete(DeleteBehavior.SetNull)`: ștergerea unei colecții lasă itemii necategorizați, nu îi șterge. `CreateItemCommandValidator`/`UpdateItemCommandValidator` au o regulă async (`MustAsync`, injectează `ICollectionRepository`) care verifică că `CollectionId`, dacă e trimis, chiar există și aparține userului curent — altfel 400, nu excepție de la baza de date.
-6. Gateway (YARP) în `services/gateway/`.
+6. ~~Gateway (YARP)~~ — făcut (2026-08-29): `services/gateway/src/Gateway.Api`, proiect single (`dotnet new web`, fără layere Clean Architecture — nu are logică de business, doar rutare). `AddReverseProxy().LoadFromConfig(...)` + `app.MapReverseProxy()`, rute în `appsettings.json` sub `ReverseProxy:Routes`/`Clusters`. Fiecare serviciu e prefixat cu numele lui (`/collections-service/{**catch-all}` → `PathRemovePrefix` → forward la `collections-service`, `http://localhost:5024` în dev) — ca să nu apară coliziuni de path când se adaugă al doilea serviciu. Testat live: health check, Create/GetById cu JWT prin gateway, 401 fără token — toate identice cu apelul direct. Auth JWT rămâne validat de fiecare serviciu individual (nu s-a mutat centralizat în gateway) — de discutat separat dacă/când merită schimbat.
 7. ~~CI (GitHub Actions)~~ — făcut (2026-08-29): `.github/workflows/collections-service-ci.yml`, `dotnet restore` + `build` (Release) pe PR către `develop` și pe push pe `develop`, scopat la `services/collections-service/**`. Neobligatoriu încă (nu e status check required în ruleset) — doar semnal vizibil pe PR.
 8. `release-please` pentru versionare SemVer — amânat intenționat (2026-08-29): nu are sens până nu există un consumator real de versiuni (Gateway sau clientul iOS care depinde de o versiune anume a API-ului).
 9. Proiect Xcode inițial (SwiftUI, login AppAuth + Keycloak PKCE, Main Menu, apel către collections-service/Gateway).
