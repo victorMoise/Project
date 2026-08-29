@@ -1,0 +1,29 @@
+name: Collections Service CI
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - "services/collections-service/**"
+      - ".github/workflows/collections-service-ci.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "services/collections-service/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/collections-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - run: dotnet restore
+
+      - run: dotnet build --no-restore --configuration Release
