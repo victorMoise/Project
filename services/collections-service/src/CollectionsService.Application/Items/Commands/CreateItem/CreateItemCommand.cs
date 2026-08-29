@@ -6,5 +6,5 @@ public record CreateItemCommand(
     string Name,
     string? Description,
     decimal PurchasePrice,
-    DateTime PurchaseDate
+    DateOnly PurchaseDate
 ) : IRequest<int>;
