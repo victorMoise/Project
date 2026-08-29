@@ -2,12 +2,14 @@ using CollectionsService.Application.Items;
 using CollectionsService.Application.Items.Commands.CreateItem;
 using CollectionsService.Application.Items.Queries.GetItemById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CollectionsService.Api.Controllers;
 
 [ApiController]
 [Route("api/items")]
+[Authorize]
 public class ItemsController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
