@@ -10,7 +10,7 @@ public class ListItemsHandler(IItemRepository repository, ICurrentUserService cu
         var items = await repository.ListAsync(currentUserService.OwnerId, request.Limit, request.Offset, cancellationToken);
 
         return items
-            .Select(item => new ItemDto(item.Id, item.Name, item.Description, item.PurchasePrice, item.EstimatedValue, item.PurchaseDate))
+            .Select(item => new ItemDto(item.Id, item.Name, item.Description, item.PurchasePrice, item.EstimatedValue, item.PurchaseDate, item.CollectionId))
             .ToList();
     }
 }

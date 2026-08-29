@@ -6,5 +6,6 @@ public record ItemDto(
     string? Description,
     decimal PurchasePrice,
     decimal? EstimatedValue,
-    DateOnly PurchaseDate
+    DateOnly PurchaseDate,
+    int? CollectionId
 );
