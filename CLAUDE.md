@@ -76,10 +76,8 @@ Project/
 9. Proiect Xcode inițial (SwiftUI, login AppAuth + Keycloak PKCE, Main Menu, apel către collections-service/Gateway).
 10. MinIO pentru poze la itemi (neurgent).
 
-## Cunoscut, neadresat
-
-`Item.Name`/`Description` și `Collection.Name` nu au `HasMaxLength` configurat — Postgres le mapează pe `text` nelimitat. Semnalat de skill-ul `database-performance` ("Constrain Column Sizes") la review-ul CRUD-ului (2026-08-29), amânat intenționat. De adăugat: `IEntityTypeConfiguration<T>` sau extins `OnModelCreating` în `CollectionsDbContext` + migrare, pentru ambele entități odată.
-
 ## Bug rezolvat (istoric)
+
+~~`Item.Name`/`Description` și `Collection.Name` fără `HasMaxLength`~~ — rezolvat (2026-08-29): `HasMaxLength` în `CollectionsDbContext.OnModelCreating` (`Name` 200, `Description` 1000 — coloane Postgres `character varying(n)` în loc de `text` nelimitat), plus reguli `MaximumLength` identice în toți cei 4 validatori FluentValidation (`CreateItemCommandValidator`, `UpdateItemCommandValidator`, `CreateCollectionCommandValidator`, `UpdateCollectionCommandValidator`) — un nume prea lung dă 400 structurat, nu o eroare brută de la Postgres. Migrare: `AddColumnLengthConstraints`.
 
 ~~`Item.PurchaseDate` (DateTime) mapat pe coloană Postgres `timestamp with time zone`~~ — rezolvat (2026-08-29): `PurchaseDate` a devenit `DateOnly` (Domain, `CreateItemCommand`, `ItemDto`), mapat de EF Core/Npgsql pe coloană Postgres `date`. Motivul real al bug-ului: `timestamptz` cere `DateTime` cu `Kind=Utc`, dar un JSON de dată fără offset (`"2026-01-01"`) deserializa la `Kind=Unspecified`, respins de Npgsql. `DateOnly` elimină complet problema — nu mai există concept de fus orar/oră pentru o dată de achiziție, care oricum nu avea nevoie de componentă de timp. Migrare EF: `ChangePurchaseDateToDateOnly` (`ALTER COLUMN ... TYPE date`, cast implicit acceptat de Postgres).
