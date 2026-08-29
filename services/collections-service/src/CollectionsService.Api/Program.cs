@@ -1,40 +1,13 @@
-using CollectionsService.Api.ExceptionHandling;
-using CollectionsService.Api.Services;
+using CollectionsService.Api;
 using CollectionsService.Application;
-using CollectionsService.Application.Common;
 using CollectionsService.Infrastructure;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.Services.AddHealthChecks();
-
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
-
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
-
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.Authority = builder.Configuration["Keycloak:Authority"];
-        options.RequireHttpsMetadata = false;
-        options.MapInboundClaims = false;
-        // The Keycloak client has no audience mapper configured yet.
-        options.TokenValidationParameters.ValidateAudience = false;
-    });
-builder.Services.AddAuthorization();
+builder.Services.AddApi(builder.Configuration);
 
 var app = builder.Build();
 

@@ -11,7 +11,10 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<CollectionsDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("CollectionsDb")));
+        {
+            options.UseNpgsql(configuration.GetConnectionString("CollectionsDb"));
+            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+        });
 
         services.AddScoped<IItemRepository, ItemRepository>();
 
