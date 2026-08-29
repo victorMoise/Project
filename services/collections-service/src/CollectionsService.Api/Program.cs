@@ -1,3 +1,4 @@
+using CollectionsService.Application;
 using CollectionsService.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,17 +11,19 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
-builder.Services.AddDbContext<CollectionsDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("CollectionsDb")));
-
-builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("CollectionsDb")!);
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Apply migrations at startup
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<CollectionsDbContext>();
+    db.Database.Migrate();
+
     app.MapOpenApi();
 }
 

@@ -1,8 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CollectionsService.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CollectionsService.Infrastructure;
 
 public class CollectionsDbContext(DbContextOptions<CollectionsDbContext> options) : DbContext(options)
 {
-    // DbSets here
+    public DbSet<Item> Items => Set<Item>();
 }
