@@ -6,6 +6,6 @@ public class UpdateCollectionCommandValidator : AbstractValidator<UpdateCollecti
 {
     public UpdateCollectionCommandValidator()
     {
-        RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
     }
 }

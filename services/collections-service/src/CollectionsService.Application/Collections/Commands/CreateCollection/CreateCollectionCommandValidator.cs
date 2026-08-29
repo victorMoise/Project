@@ -6,6 +6,6 @@ public class CreateCollectionCommandValidator : AbstractValidator<CreateCollecti
 {
     public CreateCollectionCommandValidator()
     {
-        RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
     }
 }
