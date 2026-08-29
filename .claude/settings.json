@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && dotnet slopwatch analyze -d . --hook",
+            "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *.cs|*.csproj|*Directory.Build.props|*Directory.Packages.props) echo '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":\"dotnet-skills reminder: check the relevant dotnet-skills (efcore-patterns, csharp-coding-standards, database-performance, project-structure, package-management, microsoft-extensions-dependency-injection, csharp-nullable-reference-types) before/after this .NET change, not only when explicitly asked.\"}}' ;; esac",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
