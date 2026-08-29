@@ -7,12 +7,12 @@ public class Item
     public string? Description { get; private set; }
     public decimal PurchasePrice { get; private set; }
     public decimal? EstimatedValue { get; private set; }
-    public DateTime PurchaseDate { get; private set; }
+    public DateOnly PurchaseDate { get; private set; }
     public Guid OwnerId { get; private set; }
 
     private Item() { }
 
-    public Item(string name, decimal purchasePrice, DateTime purchaseDate, Guid ownerId, string? description = null)
+    public Item(string name, decimal purchasePrice, DateOnly purchaseDate, Guid ownerId, string? description = null)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name cannot be empty", nameof(name));

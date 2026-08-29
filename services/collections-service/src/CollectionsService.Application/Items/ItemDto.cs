@@ -6,5 +6,5 @@ public record ItemDto(
     string? Description,
     decimal PurchasePrice,
     decimal? EstimatedValue,
-    DateTime PurchaseDate
+    DateOnly PurchaseDate
 );

@@ -73,6 +73,6 @@ Project/
 9. Proiect Xcode inițial (SwiftUI, login AppAuth + Keycloak PKCE, Main Menu, apel către collections-service/Gateway).
 10. MinIO pentru poze la itemi (neurgent).
 
-## Bug cunoscut, nerezolvat
+## Bug rezolvat (istoric)
 
-`Item.PurchaseDate` (DateTime) mapat pe coloană Postgres `timestamp with time zone`. Dacă JSON-ul de request trimite o dată fără offset (ex. `"2026-01-01"`), `System.Text.Json` produce `DateTime` cu `Kind=Unspecified`, iar Npgsql aruncă `ArgumentException` la insert (acceptă doar `Kind=Utc`). Testat manual cu `"2026-01-01T00:00:00Z"` — funcționează. De la exception handling global (2026-08-29), clientul primește un 500 ProblemDetails curat în loc de stack trace, dar defectul funcțional (data nevalidă e respinsă în loc să fie acceptată) tot există. De rezolvat quando se face CRUD-ul complet (opțiuni: `DateOnly` în loc de `DateTime`, sau forțare explicită la UTC în handler/entitate).
+~~`Item.PurchaseDate` (DateTime) mapat pe coloană Postgres `timestamp with time zone`~~ — rezolvat (2026-08-29): `PurchaseDate` a devenit `DateOnly` (Domain, `CreateItemCommand`, `ItemDto`), mapat de EF Core/Npgsql pe coloană Postgres `date`. Motivul real al bug-ului: `timestamptz` cere `DateTime` cu `Kind=Utc`, dar un JSON de dată fără offset (`"2026-01-01"`) deserializa la `Kind=Unspecified`, respins de Npgsql. `DateOnly` elimină complet problema — nu mai există concept de fus orar/oră pentru o dată de achiziție, care oricum nu avea nevoie de componentă de timp. Migrare EF: `ChangePurchaseDateToDateOnly` (`ALTER COLUMN ... TYPE date`, cast implicit acceptat de Postgres).
