@@ -19,11 +19,14 @@ public static class DependencyInjection
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
+        var keycloakAuthority = configuration["Keycloak:Authority"];
+        ArgumentException.ThrowIfNullOrEmpty(keycloakAuthority, "Keycloak:Authority");
+
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
-                options.Authority = configuration["Keycloak:Authority"];
+                options.Authority = keycloakAuthority;
                 options.RequireHttpsMetadata = false;
                 options.MapInboundClaims = false;
                 // The Keycloak client has no audience mapper configured yet.
