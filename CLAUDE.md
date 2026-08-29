@@ -62,14 +62,16 @@ Project/
 
 1. ~~Validare JWT în `collections-service`~~ — făcut (2026-08-29): `AddJwtBearer`, authority = `http://localhost:8080/realms/project`, `[Authorize]` pe `ItemsController`. Client Keycloak de test: `dev-testing` (client authentication ON, necesită `client_secret`). Audience validation dezactivată temporar — clientul nu are încă un audience mapper configurat.
    - `OwnerId` nu mai există ca proprietate în comenzi/query-uri și nu vine niciodată din request body — se obține exclusiv printr-un `ICurrentUserService` (interfața în `Application/Common`, implementarea `CurrentUserService` în `Api/Services`, bazată pe `IHttpContextAccessor` + claim-ul `sub`), injectat direct în handler-ele care au nevoie de el. Orice comandă/query viitoare care are nevoie de owner-ul curent injectează `ICurrentUserService`, nu primește `OwnerId` ca parametru.
-2. CRUD complet pentru `Item` (List/Update/Delete) — `OwnerId` vine corect din token de la început.
-3. Entitatea `Collection` (gruparea de itemi).
-4. Gateway (YARP) în `services/gateway/`.
-5. CI (GitHub Actions) în `.github/workflows/`.
-6. `release-please` pentru versionare SemVer.
-7. Proiect Xcode inițial (SwiftUI, login AppAuth + Keycloak PKCE, Main Menu, apel către collections-service/Gateway).
-8. MinIO pentru poze la itemi (neurgent).
+2. ~~Exception handling global~~ — făcut (2026-08-29): `GlobalExceptionHandler` (`Api/ExceptionHandling`, implementează `IExceptionHandler`) + `AddProblemDetails()` + `app.UseExceptionHandler()`. Orice excepție necontrolată se loghează complet server-side, dar clientul primește doar un `application/problem+json` generic (500, cu `traceId`), nu stack trace. Nu schimbă formatul răspunsurilor 401/404 (rămân ca înainte) — doar excepțiile necontrolate.
+3. Validare prin MediatR pipeline behavior (FluentValidation) — comenzile să fie validate înainte de handler, cu 400 + erori structurate, nu doar `ArgumentException` din constructorul entității Domain.
+4. CRUD complet pentru `Item` (List/Update/Delete) — `OwnerId` vine corect din token de la început.
+5. Entitatea `Collection` (gruparea de itemi).
+6. Gateway (YARP) în `services/gateway/`.
+7. CI (GitHub Actions) în `.github/workflows/`.
+8. `release-please` pentru versionare SemVer.
+9. Proiect Xcode inițial (SwiftUI, login AppAuth + Keycloak PKCE, Main Menu, apel către collections-service/Gateway).
+10. MinIO pentru poze la itemi (neurgent).
 
 ## Bug cunoscut, nerezolvat
 
-`Item.PurchaseDate` (DateTime) mapat pe coloană Postgres `timestamp with time zone`. Dacă JSON-ul de request trimite o dată fără offset (ex. `"2026-01-01"`), `System.Text.Json` produce `DateTime` cu `Kind=Unspecified`, iar Npgsql aruncă `ArgumentException` la insert (acceptă doar `Kind=Utc`). Testat manual cu `"2026-01-01T00:00:00Z"` — funcționează. De rezolvat quando se face CRUD-ul complet (opțiuni: `DateOnly` în loc de `DateTime`, sau forțare explicită la UTC în handler/entitate).
+`Item.PurchaseDate` (DateTime) mapat pe coloană Postgres `timestamp with time zone`. Dacă JSON-ul de request trimite o dată fără offset (ex. `"2026-01-01"`), `System.Text.Json` produce `DateTime` cu `Kind=Unspecified`, iar Npgsql aruncă `ArgumentException` la insert (acceptă doar `Kind=Utc`). Testat manual cu `"2026-01-01T00:00:00Z"` — funcționează. De la exception handling global (2026-08-29), clientul primește un 500 ProblemDetails curat în loc de stack trace, dar defectul funcțional (data nevalidă e respinsă în loc să fie acceptată) tot există. De rezolvat quando se face CRUD-ul complet (opțiuni: `DateOnly` în loc de `DateTime`, sau forțare explicită la UTC în handler/entitate).
