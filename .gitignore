@@ -1,0 +1,19 @@
+# .NET
+bin/
+obj/
+*.user
+**/appsettings.Development.json
+
+# Xcode / iOS
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+*.xcuserstate
+.build/
+
+# Docker / secrete
+.env
+*.env.local
+
+# General
+.DS_Store
