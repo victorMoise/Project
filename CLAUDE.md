@@ -1,6 +1,6 @@
 # Project — instrucțiuni pentru Claude Code
 
-Platformă personală modulară (proiect de învățare: backend, baze de date, Docker, CI/CD, iOS). Fiecare modul funcțional e un **microserviciu independent**, cu bază de date proprie, expus printr-un API propriu. Un singur client iOS (SwiftUI) va consuma toate serviciile.
+Platformă personală modulară (proiect de învățare: backend, baze de date, Docker, CI/CD, mobil). Fiecare modul funcțional e un **microserviciu independent**, cu bază de date proprie, expus printr-un API propriu. Un singur client mobil (React Native) va consuma toate serviciile.
 
 Primul modul, în lucru: tracker de colecții personale (`services/collections-service`) — obiecte colecționate (vinuri, LEGO, cărți de joc etc.) cu preț plătit, valoare estimată.
 
@@ -17,7 +17,7 @@ Primul modul, în lucru: tracker de colecții personale (`services/collections-s
 | ORM | EF Core + Npgsql |
 | ID-uri entități | INT identity, auto-incrementat de DB — NU Guid generat în cod. `OwnerId` rămâne Guid (reflectă `sub`-ul din JWT Keycloak) |
 | Auth | Keycloak (self-hosted, Docker), realm unic `project` pentru toate serviciile |
-| Client | iOS nativ, SwiftUI — neînceput |
+| Client | React Native — neînceput. Decizie schimbată (2026-08-29) de la iOS nativ/SwiftUI: motiv nou și concret — lucru de pe 2 calculatoare (Mac + un al doilea PC Windows/Linux) + experiență React deja existentă. Cross-platform (iOS + Android), dar build/code signing pentru iOS tot necesită Mac + Xcode — restricție Apple, neschimbată de alegerea de framework |
 | IDE backend | VS Code + C# Dev Kit (nu Rider) |
 | Orchestrare locală | `docker-compose.yml` clasic în `infra/` (nu .NET Aspire) |
 | Gateway | YARP, `services/gateway/` — proiect single (fără Clean Architecture layers, nu are logică de business). Rutare prefixată cu numele serviciului (`/collections-service/{**catch-all}` → strip prefix → `collections-service`), ca să nu coliziune cu rutele viitoarelor servicii |
@@ -48,7 +48,7 @@ Project/
 ├── services/
 │   ├── collections-service/   (Clean Architecture, vezi mai jos)
 │   └── gateway/                (Gateway.slnx, global.json, src/Gateway.Api/ — proiect single, YARP, fără Directory.Build.props/Packages.props încă, nu are sens cu un singur proiect/pachet)
-├── ios/                        (gol)
+├── mobile/                     (gol — React Native, neînceput; redenumit din `ios/` la 2026-08-29)
 └── infra/
     ├── docker-compose.yml
     └── .env                     (gitignored — parole reale)
@@ -73,8 +73,8 @@ Project/
 5. ~~Entitatea `Collection`~~ — făcut (2026-08-29): `Collection` (Domain: `Id`, `Name`, `OwnerId`) cu CRUD complet (`api/collections`), identic ca pattern cu `Item`. `Item.CollectionId` (int?, nullabil — un item poate fi necategorizat) e FK către `Collection`, configurat explicit în `CollectionsDbContext.OnModelCreating` (fără proprietăți de navigare pe niciuna din entități — relația se declară doar prin `HasForeignKey`), cu `OnDelete(DeleteBehavior.SetNull)`: ștergerea unei colecții lasă itemii necategorizați, nu îi șterge. `CreateItemCommandValidator`/`UpdateItemCommandValidator` au o regulă async (`MustAsync`, injectează `ICollectionRepository`) care verifică că `CollectionId`, dacă e trimis, chiar există și aparține userului curent — altfel 400, nu excepție de la baza de date.
 6. ~~Gateway (YARP)~~ — făcut (2026-08-29): `services/gateway/src/Gateway.Api`, proiect single (`dotnet new web`, fără layere Clean Architecture — nu are logică de business, doar rutare). `AddReverseProxy().LoadFromConfig(...)` + `app.MapReverseProxy()`, rute în `appsettings.json` sub `ReverseProxy:Routes`/`Clusters`. Fiecare serviciu e prefixat cu numele lui (`/collections-service/{**catch-all}` → `PathRemovePrefix` → forward la `collections-service`, `http://localhost:5024` în dev) — ca să nu apară coliziuni de path când se adaugă al doilea serviciu. Testat live: health check, Create/GetById cu JWT prin gateway, 401 fără token — toate identice cu apelul direct. Auth JWT rămâne validat de fiecare serviciu individual (nu s-a mutat centralizat în gateway) — de discutat separat dacă/când merită schimbat.
 7. ~~CI (GitHub Actions)~~ — făcut (2026-08-29): `.github/workflows/collections-service-ci.yml` și `gateway-ci.yml`, `dotnet restore` + `build` (Release) pe PR către `develop` și pe push pe `develop`, fiecare scopat la path-ul serviciului lui (`services/collections-service/**`, `services/gateway/**`). Un serviciu nou primește propriul workflow, la fel scopat. Neobligatoriu încă (nu e status check required în ruleset) — doar semnal vizibil pe PR.
-8. `release-please` pentru versionare SemVer — amânat intenționat (2026-08-29): nu are sens până nu există un consumator real de versiuni (Gateway sau clientul iOS care depinde de o versiune anume a API-ului).
-9. Proiect Xcode inițial (SwiftUI, login AppAuth + Keycloak PKCE, Main Menu, apel către collections-service/Gateway).
+8. `release-please` pentru versionare SemVer — amânat intenționat (2026-08-29): nu are sens până nu există un consumator real de versiuni (Gateway sau clientul mobil care depinde de o versiune anume a API-ului).
+9. Proiect React Native inițial (`mobile/`) — login AppAuth (`react-native-app-auth`) + Keycloak PKCE, ecran principal, apel către Gateway. Client Keycloak nou necesar (Authorization Code + PKCE), separat de `dev-testing` (care rămâne strict pentru teste tehnice din Postman/curl).
 10. MinIO pentru poze la itemi (neurgent).
 
 ## Bug rezolvat (istoric)
