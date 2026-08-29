@@ -14,10 +14,7 @@ public class Item
 
     public Item(string name, decimal purchasePrice, DateOnly purchaseDate, Guid ownerId, string? description = null)
     {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Name cannot be empty", nameof(name));
-        if (purchasePrice < 0)
-            throw new ArgumentException("Price cannot be negative", nameof(purchasePrice));
+        EnsureValid(name, purchasePrice);
 
         Name = name;
         Description = description;
@@ -26,10 +23,28 @@ public class Item
         OwnerId = ownerId;
     }
 
+    public void UpdateDetails(string name, decimal purchasePrice, DateOnly purchaseDate, string? description = null)
+    {
+        EnsureValid(name, purchasePrice);
+
+        Name = name;
+        Description = description;
+        PurchasePrice = purchasePrice;
+        PurchaseDate = purchaseDate;
+    }
+
     public void UpdateEstimatedValue(decimal newValue)
     {
         if (newValue < 0)
             throw new ArgumentException("Value cannot be negative", nameof(newValue));
         EstimatedValue = newValue;
+    }
+
+    private static void EnsureValid(string name, decimal purchasePrice)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Name cannot be empty", nameof(name));
+        if (purchasePrice < 0)
+            throw new ArgumentException("Price cannot be negative", nameof(purchasePrice));
     }
 }
