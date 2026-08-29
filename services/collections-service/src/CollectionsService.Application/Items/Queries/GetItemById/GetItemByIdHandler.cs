@@ -11,6 +11,6 @@ public class GetItemByIdHandler(IItemRepository repository, ICurrentUserService 
         if (item is null)
             return null;
 
-        return new ItemDto(item.Id, item.Name, item.Description, item.PurchasePrice, item.EstimatedValue, item.PurchaseDate);
+        return new ItemDto(item.Id, item.Name, item.Description, item.PurchasePrice, item.EstimatedValue, item.PurchaseDate, item.CollectionId);
     }
 }

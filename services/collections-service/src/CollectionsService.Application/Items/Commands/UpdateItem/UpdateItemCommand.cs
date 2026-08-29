@@ -7,5 +7,6 @@ public record UpdateItemCommand(
     string Name,
     string? Description,
     decimal PurchasePrice,
-    DateOnly PurchaseDate
+    DateOnly PurchaseDate,
+    int? CollectionId = null
 ) : IRequest<bool>;

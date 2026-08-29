@@ -8,7 +8,7 @@ public class CreateItemHandler(IItemRepository repository, ICurrentUserService c
 {
     public async Task<int> Handle(CreateItemCommand request, CancellationToken cancellationToken)
     {
-        var item = new Item(request.Name, request.PurchasePrice, request.PurchaseDate, currentUserService.OwnerId, request.Description);
+        var item = new Item(request.Name, request.PurchasePrice, request.PurchaseDate, currentUserService.OwnerId, request.Description, request.CollectionId);
         await repository.AddAsync(item, cancellationToken);
         return item.Id;
     }

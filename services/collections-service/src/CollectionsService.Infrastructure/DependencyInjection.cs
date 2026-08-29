@@ -1,3 +1,4 @@
+using CollectionsService.Application.Collections;
 using CollectionsService.Application.Items;
 using CollectionsService.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IItemRepository, ItemRepository>();
+        services.AddScoped<ICollectionRepository, CollectionRepository>();
 
         return services;
     }

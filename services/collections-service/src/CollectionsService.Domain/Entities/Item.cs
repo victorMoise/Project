@@ -9,10 +9,11 @@ public class Item
     public decimal? EstimatedValue { get; private set; }
     public DateOnly PurchaseDate { get; private set; }
     public Guid OwnerId { get; private set; }
+    public int? CollectionId { get; private set; }
 
     private Item() { }
 
-    public Item(string name, decimal purchasePrice, DateOnly purchaseDate, Guid ownerId, string? description = null)
+    public Item(string name, decimal purchasePrice, DateOnly purchaseDate, Guid ownerId, string? description = null, int? collectionId = null)
     {
         EnsureValid(name, purchasePrice);
 
@@ -21,9 +22,10 @@ public class Item
         PurchasePrice = purchasePrice;
         PurchaseDate = purchaseDate;
         OwnerId = ownerId;
+        CollectionId = collectionId;
     }
 
-    public void UpdateDetails(string name, decimal purchasePrice, DateOnly purchaseDate, string? description = null)
+    public void UpdateDetails(string name, decimal purchasePrice, DateOnly purchaseDate, string? description = null, int? collectionId = null)
     {
         EnsureValid(name, purchasePrice);
 
@@ -31,6 +33,7 @@ public class Item
         Description = description;
         PurchasePrice = purchasePrice;
         PurchaseDate = purchaseDate;
+        CollectionId = collectionId;
     }
 
     public void UpdateEstimatedValue(decimal newValue)
