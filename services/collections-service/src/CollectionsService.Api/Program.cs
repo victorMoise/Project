@@ -1,5 +1,8 @@
+using CollectionsService.Api.Services;
 using CollectionsService.Application;
+using CollectionsService.Application.Common;
 using CollectionsService.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +16,21 @@ builder.Services.AddHealthChecks();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = builder.Configuration["Keycloak:Authority"];
+        options.RequireHttpsMetadata = false;
+        options.MapInboundClaims = false;
+        // The Keycloak client has no audience mapper configured yet.
+        options.TokenValidationParameters.ValidateAudience = false;
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -29,6 +47,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
