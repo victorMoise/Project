@@ -15,5 +15,10 @@ DerivedData/
 .env
 *.env.local
 
+# Claude Code skill installs (npx skills) - local tooling, not project code
+.agents/
+.claude/skills/
+skills-lock.json
+
 # General
 .DS_Store
