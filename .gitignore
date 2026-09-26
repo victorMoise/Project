@@ -23,5 +23,8 @@ skills-lock.json
 # ./start / ./stop runtime state (logs, pids)
 .dev/
 
+# Playwright MCP test artifacts
+.playwright-mcp/
+
 # General
 .DS_Store
