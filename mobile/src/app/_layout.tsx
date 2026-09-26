@@ -1,14 +1,48 @@
+import { useMemo } from 'react';
 import { Stack } from 'expo-router';
+import { ThemeProvider as NavigationThemeProvider, DefaultTheme, DarkTheme } from 'expo-router/react-navigation';
+import { StatusBar } from 'expo-status-bar';
 
 import { SplashScreenController } from '@/components/splash-screen-controller';
 import { AuthProvider, useAuth } from '@/context/auth-context';
+import { ThemeProvider, useTheme, useAppFonts } from '@/theme';
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <SplashScreenController />
+    <ThemeProvider>
+      <AuthProvider>
+        <AppShell />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
+
+function AppShell() {
+  const [fontsLoaded] = useAppFonts();
+  const theme = useTheme();
+
+  const navigationTheme = useMemo(() => {
+    const base = theme.colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: theme.colors.accent,
+        background: theme.colors.background,
+        card: theme.colors.surface,
+        text: theme.colors.textPrimary,
+        border: theme.colors.border,
+        notification: theme.colors.danger,
+      },
+    };
+  }, [theme]);
+
+  return (
+    <NavigationThemeProvider value={navigationTheme}>
+      <SplashScreenController fontsLoaded={fontsLoaded} />
+      <StatusBar style={theme.colorScheme === 'dark' ? 'light' : 'dark'} />
       <RootNavigator />
-    </AuthProvider>
+    </NavigationThemeProvider>
   );
 }
 

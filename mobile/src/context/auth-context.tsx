@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 
 import { useStorageState } from '@/hooks/use-storage-state';
 import { keycloakConfig } from '@/utils/keycloak-config';
+import { useTheme } from '@/theme';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -47,15 +48,19 @@ function toSession(tokens: AuthSession.TokenResponse): Session {
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [[isLoadingStorage, storedSession], setStoredSession] = useStorageState(SESSION_STORAGE_KEY);
+  const theme = useTheme();
 
   const discovery = AuthSession.useAutoDiscovery(keycloakConfig.issuer);
   const redirectUri = useMemo(() => AuthSession.makeRedirectUri({ path: 'redirect' }), []);
 
+  // Lets the Keycloak login page open in the same theme the app is
+  // currently using -- see infra/keycloak-theme's ui_theme bootstrap script.
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: keycloakConfig.clientId,
       scopes: ['openid', 'profile', 'email'],
       redirectUri,
+      extraParams: { ui_theme: theme.id },
     },
     discovery
   );
