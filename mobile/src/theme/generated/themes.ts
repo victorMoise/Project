@@ -104,7 +104,7 @@ export const themes = {
       overlay: "#00000080",
     },
   },
-  cyber-grape: {
+  "cyber-grape": {
     id: "cyber-grape",
     name: "Cyber Grape",
     colorScheme: "dark",
@@ -128,7 +128,7 @@ export const themes = {
       overlay: "#00000080",
     },
   },
-  cyber-teal: {
+  "cyber-teal": {
     id: "cyber-teal",
     name: "Cyber Teal",
     colorScheme: "dark",
@@ -152,7 +152,7 @@ export const themes = {
       overlay: "#00000080",
     },
   },
-  deep-graphite: {
+  "deep-graphite": {
     id: "deep-graphite",
     name: "Deep Graphite",
     colorScheme: "dark",
@@ -176,7 +176,7 @@ export const themes = {
       overlay: "#00000080",
     },
   },
-  quantum-blue: {
+  "quantum-blue": {
     id: "quantum-blue",
     name: "Quantum Blue",
     colorScheme: "dark",

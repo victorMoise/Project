@@ -113,11 +113,18 @@ function colorRoleNames(themes) {
   return roles;
 }
 
+// Theme ids are kebab-case (e.g. "cyber-grape") and NOT valid bare object
+// keys in JS/TS -- every place that emits `<id>: ...` in generated source
+// must go through this, or it silently produces `cyber - grape: ...`.
+function objectKey(name) {
+  return /^[a-zA-Z_$][\w$]*$/.test(name) ? name : JSON.stringify(name);
+}
+
 function toTsObjectLiteral(value, indent = "  ") {
   if (typeof value === "number") return String(value);
   if (typeof value === "string") return JSON.stringify(value);
   const entries = Object.entries(value)
-    .map(([k, v]) => `${indent}  ${/^[a-zA-Z_$][\w$]*$/.test(k) ? k : JSON.stringify(k)}: ${toTsObjectLiteral(v, indent + "  ")},`)
+    .map(([k, v]) => `${indent}  ${objectKey(k)}: ${toTsObjectLiteral(v, indent + "  ")},`)
     .join("\n");
   return `{\n${entries}\n${indent}}`;
 }
@@ -129,7 +136,7 @@ async function writeMobileThemes(themes, roles) {
   const colorFields = roles.map((r) => `  ${r}: string;`).join("\n");
   const themeEntries = themes
     .map(
-      (t) => `  ${t.id}: {
+      (t) => `  ${objectKey(t.id)}: {
     id: ${JSON.stringify(t.id)},
     name: ${JSON.stringify(t.name)},
     colorScheme: ${JSON.stringify(t.colorScheme)},
@@ -243,11 +250,11 @@ export const themeIds = [${themes.map((t) => JSON.stringify(t.id)).join(", ")}] 
 export type ThemeId = (typeof themeIds)[number];
 
 export const themeNames: Record<ThemeId, string> = {
-${themes.map((t) => `  ${t.id}: ${JSON.stringify(t.name)},`).join("\n")}
+${themes.map((t) => `  ${objectKey(t.id)}: ${JSON.stringify(t.name)},`).join("\n")}
 };
 
 export const colorSchemeByTheme: Record<ThemeId, "light" | "dark"> = {
-${themes.map((t) => `  ${t.id}: ${JSON.stringify(t.colorScheme)},`).join("\n")}
+${themes.map((t) => `  ${objectKey(t.id)}: ${JSON.stringify(t.colorScheme)},`).join("\n")}
 };
 
 export const defaultLightThemeId: ThemeId = ${JSON.stringify(defaultLight)};
