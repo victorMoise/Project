@@ -1,0 +1,9 @@
+{
+  "radius": {
+    "none": { "$type": "number", "$value": 0 },
+    "sm": { "$type": "number", "$value": 8 },
+    "md": { "$type": "number", "$value": 10 },
+    "lg": { "$type": "number", "$value": 16 },
+    "full": { "$type": "number", "$value": 9999 }
+  }
+}

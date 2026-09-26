@@ -1,0 +1,6 @@
+{
+  "motion": {
+    "fast": { "$type": "number", "$value": 150 },
+    "base": { "$type": "number", "$value": 250 }
+  }
+}
