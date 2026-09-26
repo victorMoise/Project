@@ -96,31 +96,36 @@ body {
   align-items: flex-start;
   gap: var(--space-sm);
   border-radius: var(--radius-md);
-  padding: var(--space-sm) var(--space-md);
+  border-left: 4px solid transparent;
+  padding: var(--space-md);
   margin-bottom: var(--space-lg);
-  font-size: var(--font-label-size);
-  line-height: var(--line-height-label);
+  font-family: var(--font-label-family);
+  font-size: var(--font-body-size);
+  line-height: var(--line-height-body);
 }
 
 .kc-alert-icon {
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .kc-alert-error {
   background: var(--color-danger-surface);
   color: var(--color-danger);
+  border-left-color: var(--color-danger);
 }
 
 .kc-alert-success {
   background: var(--color-success-surface);
   color: var(--color-success);
+  border-left-color: var(--color-success);
 }
 
 .kc-alert-warning,
 .kc-alert-info {
   background: var(--color-surface-raised);
   color: var(--color-text-primary);
+  border-left-color: var(--color-border);
 }
 
 .kc-form {
@@ -164,6 +169,7 @@ body {
 
 .kc-input[aria-invalid="true"] {
   border-color: var(--color-danger);
+  border-width: 2px;
 }
 
 .kc-input-group .kc-input {
@@ -194,9 +200,13 @@ body {
   align-items: center;
   gap: var(--space-xs);
   color: var(--color-danger);
-  font-family: var(--font-caption-family);
-  font-size: var(--font-caption-size);
-  line-height: var(--line-height-caption);
+  font-family: var(--font-label-family);
+  font-size: var(--font-label-size);
+  line-height: var(--line-height-label);
+}
+
+.kc-field-error svg {
+  flex-shrink: 0;
 }
 
 .kc-options-row {

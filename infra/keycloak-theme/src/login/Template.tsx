@@ -82,7 +82,7 @@ export default function Template(props: TemplateProps<KcContext, I18n>) {
 
           {displayMessage && message !== undefined && (message.type !== "warning" || !isAppInitiatedAction) && AlertIcon && (
             <div className={`kc-alert kc-alert-${message.type}`} role="alert">
-              <AlertIcon size={20} weight="fill" className="kc-alert-icon" aria-hidden />
+              <AlertIcon size={22} weight="fill" className="kc-alert-icon" aria-hidden />
               <span dangerouslySetInnerHTML={{ __html: kcSanitize(message.summary) }} />
             </div>
           )}
