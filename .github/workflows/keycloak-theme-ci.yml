@@ -1,0 +1,47 @@
+name: Keycloak Theme CI
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - "infra/keycloak-theme/**"
+      - ".github/workflows/keycloak-theme-ci.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "infra/keycloak-theme/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/keycloak-theme
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # keycloakify build packages the theme with Maven -- ubuntu-latest
+      # ships Maven preinstalled alongside the JDK setup-java configures.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "23"
+          cache: maven
+
+      - run: npm ci
+
+      # No ESLint here: TypeScript 7 and ESLint 10 both outpace every
+      # TS-aware ESLint parser available today (typescript-eslint and
+      # @babel/eslint-parser). See the commit that introduced this workflow
+      # for the full explanation -- color-literal enforcement for this
+      # package's TS/TSX is handled by scripts/check-color-literals.sh
+      # instead (design-tokens-ci.yml).
+      - run: npm run typecheck
+
+      - run: npm run stylelint
+
+      - run: npm run build-keycloak-theme

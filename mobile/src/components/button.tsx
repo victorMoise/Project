@@ -16,7 +16,7 @@ export function Button({ variant = 'primary', title, loading, disabled, style, .
   const theme = useTheme();
   const isDisabled = !!disabled || !!loading;
 
-  const backgroundColor = variant === 'primary' ? theme.colors.accent : variant === 'secondary' ? theme.colors.surfaceRaised : 'transparent';
+  const backgroundColor = variant === 'primary' ? theme.colors.accent : variant === 'secondary' ? theme.colors.surfaceRaised : undefined;
   const textColor = variant === 'primary' ? theme.colors.textOnAccent : theme.colors.textPrimary;
   const hasBorder = variant !== 'primary';
 

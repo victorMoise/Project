@@ -1,0 +1,39 @@
+name: Design Tokens CI
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - "packages/design-tokens/**"
+      - "scripts/check-color-literals.sh"
+      - ".github/workflows/design-tokens-ci.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "packages/design-tokens/**"
+      - "scripts/check-color-literals.sh"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/design-tokens
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - run: npm run tokens:build
+
+      # tokens:build itself fails (exit 1) on a contrast violation -- see
+      # packages/design-tokens/scripts/build.mjs.
+      - name: Fail if generated output is out of sync with committed sources
+        run: git diff --exit-code
+
+      - name: Check for hardcoded color literals repo-wide
+        run: ../../scripts/check-color-literals.sh
