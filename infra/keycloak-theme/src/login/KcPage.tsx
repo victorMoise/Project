@@ -9,6 +9,10 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Info = lazy(() => import("./pages/Info"));
 const LoginResetPassword = lazy(() => import("./pages/LoginResetPassword"));
+const Error = lazy(() => import("./pages/Error"));
+const LoginPageExpired = lazy(() => import("./pages/LoginPageExpired"));
+const LoginUpdatePassword = lazy(() => import("./pages/LoginUpdatePassword"));
+const LogoutConfirm = lazy(() => import("./pages/LogoutConfirm"));
 
 const doMakeUserConfirmPassword = true;
 
@@ -37,6 +41,14 @@ export default function KcPage(props: { kcContext: KcContext }) {
             return <Info {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss={false} />;
           case "login-reset-password.ftl":
             return <LoginResetPassword {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss={false} />;
+          case "error.ftl":
+            return <Error {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss={false} />;
+          case "login-page-expired.ftl":
+            return <LoginPageExpired {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss={false} />;
+          case "login-update-password.ftl":
+            return <LoginUpdatePassword {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss={false} />;
+          case "logout-confirm.ftl":
+            return <LogoutConfirm {...{ kcContext, i18n, classes }} Template={Template} doUseDefaultCss={false} />;
           default:
             return (
               <DefaultPage
