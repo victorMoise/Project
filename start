@@ -105,11 +105,31 @@ if [[ ! -f infra/.env ]]; then
   exit 1
 fi
 
+KEYCLOAK_THEME_DIR="infra/keycloak-theme"
+KEYCLOAK_THEME_JAR="$KEYCLOAK_THEME_DIR/dist_keycloak/keycloak-theme-for-kc-all-other-versions.jar"
+theme_rebuilt=0
+
+if [[ ! -f "$KEYCLOAK_THEME_JAR" ]] || [[ -n "$(find "$KEYCLOAK_THEME_DIR/src" packages/design-tokens/tokens -newer "$KEYCLOAK_THEME_JAR" -type f 2>/dev/null)" ]]; then
+  log "Keycloak theme jar missing or stale — building it (npm run build-keycloak-theme)..."
+  (cd "$KEYCLOAK_THEME_DIR" && npm run build-keycloak-theme) >"$LOG_DIR/keycloak-theme-build.log" 2>&1
+  theme_rebuilt=1
+else
+  log "Keycloak theme jar is up to date — skipping rebuild."
+fi
+
 log "Starting Docker infra (collections-db, keycloak-db, keycloak)..."
 (cd infra && docker compose up -d)
 
+if [[ "$theme_rebuilt" -eq 1 ]]; then
+  log "Restarting Keycloak so it picks up the rebuilt theme jar..."
+  (cd infra && docker compose restart keycloak)
+fi
+
 wait_for_tcp "$COLLECTIONS_DB_PORT" "collections-db"
 wait_for_http "http://localhost:${KEYCLOAK_PORT}/realms/project/.well-known/openid-configuration" "Keycloak (realm project)" 60
+
+log "Applying realm config (login theme, display name, en+ro)..."
+infra/keycloak/configure-realm.sh >"$LOG_DIR/configure-realm.log" 2>&1
 
 start_background "collections-service" "$PID_DIR/collections-service.pid" "$LOG_DIR/collections-service.log" \
   dotnet run --project "$COLLECTIONS_SERVICE_PROJECT"

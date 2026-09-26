@@ -1,0 +1,12 @@
+{
+  "name": "@project/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tokens:build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "style-dictionary": "5.5.5"
+  }
+}

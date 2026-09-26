@@ -1,0 +1,19 @@
+{
+  "background": "#EEF2F0",
+  "surface": "#FAFCFB",
+  "surfaceRaised": "#FFFFFF",
+  "border": "#C9D3CE",
+  "inputBorder": "#758680",
+  "textPrimary": "#15201B",
+  "textSecondary": "#4D5C55",
+  "accent": "#1D6B50",
+  "accentPressed": "#154F3C",
+  "textOnAccent": "#F3FAF6",
+  "focusRing": "#1D6B50",
+  "danger": "#A8261C",
+  "dangerSurface": "#F7E4E2",
+  "success": "#1D6B50",
+  "successSurface": "#DCEEE6",
+  "shadow": "#15201B33",
+  "overlay": "#15201B66"
+}
