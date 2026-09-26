@@ -27,6 +27,36 @@ spune exact ce pereche de culori și ce raport a obținut.
 
 ## Adaugi o temă nouă
 
+### Varianta rapidă: temă închisă din 2 culori (fundal + accent)
+
+Dacă tema e o pereche „fundal închis + accent viu" (cazul temelor `cyber-grape`,
+`raspberry`, `deep-graphite`, `blueberry`, `cyber-teal`, `quantum-blue`):
+
+```bash
+node scripts/scaffold-theme.mjs <id> "<Nume afișat>" <hexFundal> <hexAccent>
+npm run tokens:build
+```
+
+Scriptul derivă toate cele 17 roluri (surface, text, border, danger/success etc.) și
+rezolvă automat contrastul WCAG cerut pentru fiecare — vezi comentariile din
+`scripts/scaffold-theme.mjs` pentru cum. Câteva limitări de reținut:
+
+- Merge doar pentru teme **întunecate** (fundal închis, accent deschis). O temă cu fundal
+  deschis ar avea nevoie de direcțiile de amestec inversate în script.
+- Dacă fundalul e el însuși foarte saturat/luminos (ex. `quantum-blue`), `textPrimary`/
+  `textSecondary` sau `surface`/`surfaceRaised` pot ieși mai puțin diferențiate vizual —
+  e o consecință reală a contrastului WCAG pe un fundal cu puțină „marjă", nu un bug.
+- `danger`/`success` (textul de eroare/succes) pot ieși destul de pale pe un fundal foarte
+  închis și saturat — la fel, o consecință matematică (orice culoare care atinge 4.5:1 pe un
+  fundal cu luminanță foarte joasă e obligatoriu o culoare deschisă), nu o eroare de derivare.
+  `dangerSurface`/`successSurface` (cutiile de alertă) sunt derivate independent de fundalul
+  temei, ca să rămână clar roșii/verzi indiferent cât de saturată e tema.
+
+Verifică mereu vizual rezultatul (Storybook / ecranul de alegere a temei) — scriptul
+garantează doar contrastul minim, nu și cât de bine arată combinația de culori.
+
+### Varianta manuală (control total pe fiecare rol)
+
 1. `cp -r tokens/themes/vitrine tokens/themes/<id-nou>`
 2. În `meta.json`: schimbă `id` (trebuie identic cu numele folderului) și `name`; `colorScheme`
    trebuie să fie `"light"` sau `"dark"`. **Nu** seta `isDefaultLight`/`isDefaultDark` decât dacă

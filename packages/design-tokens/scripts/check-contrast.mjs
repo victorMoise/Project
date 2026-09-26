@@ -1,19 +1,7 @@
 // Pure WCAG 2.x contrast-ratio checks, run against every theme's resolved
 // color tokens before any output file is written. See docs/plans/themeable-login-plan.md §4.2.
 
-function relativeLuminance(hex) {
-  const [r, g, b] = hex
-    .slice(1, 7)
-    .match(/../g)
-    .map((h) => parseInt(h, 16) / 255)
-    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-function contrastRatio(hexA, hexB) {
-  const [lighter, darker] = [relativeLuminance(hexA), relativeLuminance(hexB)].sort((a, b) => b - a);
-  return (lighter + 0.05) / (darker + 0.05);
-}
+import { contrastRatio } from "./color-math.mjs";
 
 // [roleA, roleB, minimumRatio, note]
 // 4.5  = WCAG AA normal text (§1.4.3)
