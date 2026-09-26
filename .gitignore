@@ -20,5 +20,8 @@ DerivedData/
 .claude/skills/
 skills-lock.json
 
+# ./start / ./stop runtime state (logs, pids)
+.dev/
+
 # General
 .DS_Store
