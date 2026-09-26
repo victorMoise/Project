@@ -49,7 +49,7 @@ Project/
 ├── services/
 │   ├── collections-service/   (Clean Architecture, vezi mai jos)
 │   └── gateway/                (Gateway.slnx, global.json, src/Gateway.Api/ — proiect single, YARP, fără Directory.Build.props/Packages.props încă, nu are sens cu un singur proiect/pachet)
-├── mobile/                     (gol — React Native, neînceput; redenumit din `ios/` la 2026-08-29)
+├── mobile/                     (scaffold Expo/React Native, TypeScript, SDK 57 — făcut 2026-09-26; login Keycloak neînceput; redenumit din `ios/` la 2026-08-29)
 └── infra/
     ├── docker-compose.yml
     └── .env                     (gitignored — parole reale)
@@ -75,7 +75,7 @@ Project/
 6. ~~Gateway (YARP)~~ — făcut (2026-08-29): `services/gateway/src/Gateway.Api`, proiect single (`dotnet new web`, fără layere Clean Architecture — nu are logică de business, doar rutare). `AddReverseProxy().LoadFromConfig(...)` + `app.MapReverseProxy()`, rute în `appsettings.json` sub `ReverseProxy:Routes`/`Clusters`. Fiecare serviciu e prefixat cu numele lui (`/collections-service/{**catch-all}` → `PathRemovePrefix` → forward la `collections-service`, `http://localhost:5024` în dev) — ca să nu apară coliziuni de path când se adaugă al doilea serviciu. Testat live: health check, Create/GetById cu JWT prin gateway, 401 fără token — toate identice cu apelul direct. Auth JWT rămâne validat de fiecare serviciu individual (nu s-a mutat centralizat în gateway) — de discutat separat dacă/când merită schimbat.
 7. ~~CI (GitHub Actions)~~ — făcut (2026-08-29): `.github/workflows/collections-service-ci.yml` și `gateway-ci.yml`, `dotnet restore` + `build` (Release) pe PR către `develop` și pe push pe `develop`, fiecare scopat la path-ul serviciului lui (`services/collections-service/**`, `services/gateway/**`). Un serviciu nou primește propriul workflow, la fel scopat. Neobligatoriu încă (nu e status check required în ruleset) — doar semnal vizibil pe PR.
 8. `release-please` pentru versionare SemVer — amânat intenționat (2026-08-29): nu are sens până nu există un consumator real de versiuni (Gateway sau clientul mobil care depinde de o versiune anume a API-ului).
-9. Proiect React Native inițial (`mobile/`) — login AppAuth (`react-native-app-auth`) + Keycloak PKCE, ecran principal, apel către Gateway. Client Keycloak nou necesar (Authorization Code + PKCE), separat de `dev-testing` (care rămâne strict pentru teste tehnice din Postman/curl).
+9. ~~Scaffold Expo React Native inițial (`mobile/`)~~ — făcut (2026-09-26): `create-expo-app`, template `blank-typescript`, SDK 57, verificat cu `expo-doctor` (21/21). Rămas de făcut: login AppAuth (`react-native-app-auth`) + Keycloak PKCE, ecran principal, apel către Gateway. Client Keycloak nou necesar (Authorization Code + PKCE), separat de `dev-testing` (care rămâne strict pentru teste tehnice din Postman/curl). De verificat înainte de implementare: `react-native-app-auth` are cod nativ și nu rulează în Expo Go — necesită development build (`expo-dev-client`); alternativa `expo-auth-session` rămâne în Expo Go, dar nu e decizie fermă încă.
 10. MinIO pentru poze la itemi (neurgent).
 
 ## Bug rezolvat (istoric)
