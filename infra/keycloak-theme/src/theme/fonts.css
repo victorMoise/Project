@@ -1,0 +1,33 @@
+/* Self-hosted Geist (latin subset only -- covers en + ro). Family names match
+   the design-token values verbatim (packages/design-tokens/tokens/base/typography.json),
+   so CSS just does `font-family: var(--font-*-family)` with no separate weight token. */
+
+@font-face {
+  font-family: "Geist_400Regular";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url("../../node_modules/@fontsource/geist/files/geist-latin-400-normal.woff2") format("woff2"),
+    url("../../node_modules/@fontsource/geist/files/geist-latin-400-normal.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Geist_500Medium";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    url("../../node_modules/@fontsource/geist/files/geist-latin-500-normal.woff2") format("woff2"),
+    url("../../node_modules/@fontsource/geist/files/geist-latin-500-normal.woff") format("woff");
+}
+
+@font-face {
+  font-family: "Geist_600SemiBold";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src:
+    url("../../node_modules/@fontsource/geist/files/geist-latin-600-normal.woff2") format("woff2"),
+    url("../../node_modules/@fontsource/geist/files/geist-latin-600-normal.woff") format("woff");
+}
