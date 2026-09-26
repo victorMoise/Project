@@ -1,9 +1,10 @@
-import { createContext, use, useCallback, useEffect, useMemo, type PropsWithChildren } from 'react';
+import { createContext, use, useCallback, useEffect, useMemo, useRef, type PropsWithChildren } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 
 import { useStorageState } from '@/hooks/use-storage-state';
 import { keycloakConfig } from '@/utils/keycloak-config';
+import { useTheme } from '@/theme';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -19,7 +20,7 @@ type Session = {
 
 type AuthContextValue = {
   signIn: () => Promise<void>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
   getAccessToken: () => Promise<string | null>;
   session: Session | null;
   isLoading: boolean;
@@ -47,15 +48,19 @@ function toSession(tokens: AuthSession.TokenResponse): Session {
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [[isLoadingStorage, storedSession], setStoredSession] = useStorageState(SESSION_STORAGE_KEY);
+  const theme = useTheme();
 
   const discovery = AuthSession.useAutoDiscovery(keycloakConfig.issuer);
   const redirectUri = useMemo(() => AuthSession.makeRedirectUri({ path: 'redirect' }), []);
 
+  // Lets the Keycloak login page open in the same theme the app is
+  // currently using -- see infra/keycloak-theme's ui_theme bootstrap script.
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: keycloakConfig.clientId,
       scopes: ['openid', 'profile', 'email'],
       redirectUri,
+      extraParams: { ui_theme: theme.id },
     },
     discovery
   );
@@ -78,6 +83,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [setStoredSession]
   );
 
+  // Captured at the moment sign-in is triggered, not read live from `request`:
+  // `request` is regenerated (new PKCE challenge) whenever `theme.id` changes,
+  // which must not re-run the exchange below with an already-consumed code.
+  const codeVerifierRef = useRef<string | undefined>(undefined);
+
   useEffect(() => {
     if (response?.type === 'success' && discovery) {
       AuthSession.exchangeCodeAsync(
@@ -85,20 +95,37 @@ export function AuthProvider({ children }: PropsWithChildren) {
           clientId: keycloakConfig.clientId,
           code: response.params.code,
           redirectUri,
-          extraParams: request?.codeVerifier ? { code_verifier: request.codeVerifier } : undefined,
+          extraParams: codeVerifierRef.current ? { code_verifier: codeVerifierRef.current } : undefined,
         },
         discovery
       ).then(persistTokens);
     }
-  }, [response, discovery, request, redirectUri, persistTokens]);
+  }, [response, discovery, redirectUri, persistTokens]);
 
   const signIn = useCallback(async () => {
+    codeVerifierRef.current = request?.codeVerifier;
     await promptAsync();
-  }, [promptAsync]);
+  }, [promptAsync, request]);
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    const endSessionEndpoint = discovery?.endSessionEndpoint;
+    const idToken = session?.idToken;
+
+    if (endSessionEndpoint && idToken) {
+      const logoutUrl = `${endSessionEndpoint}?${new URLSearchParams({
+        id_token_hint: idToken,
+        post_logout_redirect_uri: redirectUri,
+      }).toString()}`;
+
+      try {
+        await WebBrowser.openAuthSessionAsync(logoutUrl, redirectUri);
+      } catch {
+        // Best-effort: the local session is cleared below regardless.
+      }
+    }
+
     setStoredSession(null);
-  }, [setStoredSession]);
+  }, [discovery, session, redirectUri, setStoredSession]);
 
   const getAccessToken = useCallback(async () => {
     if (!session) {

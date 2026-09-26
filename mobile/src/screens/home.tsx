@@ -1,8 +1,13 @@
 import { useCallback, useState } from 'react';
-import { Button, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { Link } from 'expo-router';
 
+import { Button } from '@/components/button';
+import { Screen } from '@/components/screen';
+import { ThemedText } from '@/components/themed-text';
 import { useAuth } from '@/context/auth-context';
 import { fetchFromGateway } from '@/utils/gateway-client';
+import { spacing } from '@/theme';
 
 type CallState = { status: 'idle' } | { status: 'loading' } | { status: 'success'; itemCount: number } | { status: 'error'; message: string };
 
@@ -35,33 +40,28 @@ export function Home() {
   }, [getAccessToken, signOut]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Signed in</Text>
+    <Screen style={styles.container}>
+      <ThemedText variant="title">Signed in</ThemedText>
 
-      <Button title="Call collections-service through Gateway" onPress={callGateway} />
+      <Button title="Call collections-service through Gateway" loading={callState.status === 'loading'} onPress={callGateway} />
 
-      {callState.status === 'loading' && <Text>Calling gateway…</Text>}
-      {callState.status === 'success' && <Text>Got {callState.itemCount} item(s) back.</Text>}
-      {callState.status === 'error' && <Text style={styles.error}>{callState.message}</Text>}
+      {callState.status === 'success' && <ThemedText>Got {callState.itemCount} item(s) back.</ThemedText>}
+      {callState.status === 'error' && <ThemedText color="danger">{callState.message}</ThemedText>}
 
-      <Button title="Sign out" onPress={signOut} />
-    </View>
+      <Link href="/settings/theme" asChild>
+        <Button variant="secondary" title="Theme" />
+      </Link>
+
+      <Button variant="ghost" title="Sign out" onPress={signOut} />
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 16,
-    padding: 24,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  error: {
-    color: 'red',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
 });

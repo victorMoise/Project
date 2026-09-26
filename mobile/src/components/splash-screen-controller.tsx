@@ -1,13 +1,15 @@
 import { SplashScreen } from 'expo-router';
 
 import { useAuth } from '@/context/auth-context';
+import { useThemeActions } from '@/theme';
 
 SplashScreen.preventAutoHideAsync();
 
-export function SplashScreenController() {
-  const { isLoading } = useAuth();
+export function SplashScreenController({ fontsLoaded }: { fontsLoaded: boolean }) {
+  const { isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isThemeLoading } = useThemeActions();
 
-  if (!isLoading) {
+  if (!isAuthLoading && !isThemeLoading && fontsLoaded) {
     SplashScreen.hide();
   }
 
