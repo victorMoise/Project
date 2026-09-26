@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+#
+# Starts every local component of the platform: Docker infra (Postgres x2,
+# Keycloak), collections-service, the gateway, and finally the Expo dev server
+# for mobile/ (kept in the foreground so you get the QR code / interactive menu).
+#
+# Usage: ./start
+# Stop with Ctrl+C — this also stops the two dotnet services it started.
+# Docker infra is left running on purpose (same convention as before this
+# script existed); bring it down explicitly with `./stop --infra` if needed.
+#
+# Safe to re-run: already-running pieces (Docker infra, or a dotnet service
+# left over from a previous ./start) are detected and left alone.
+
+set -euo pipefail
+set -m # background jobs get their own process group, so cleanup can kill dotnet's child process too
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
+
+DEV_DIR="$ROOT_DIR/.dev"
+LOG_DIR="$DEV_DIR/logs"
+PID_DIR="$DEV_DIR/pids"
+mkdir -p "$LOG_DIR" "$PID_DIR"
+
+COLLECTIONS_SERVICE_PROJECT="services/collections-service/src/CollectionsService.Api/CollectionsService.Api.csproj"
+GATEWAY_PROJECT="services/gateway/src/Gateway.Api/Gateway.Api.csproj"
+
+COLLECTIONS_DB_PORT=5433
+KEYCLOAK_PORT=8080
+COLLECTIONS_SERVICE_PORT=5024
+GATEWAY_PORT=5096
+
+STARTED_PID_FILES=()
+
+log()  { printf '\033[1;34m[start]\033[0m %s\n' "$1"; }
+warn() { printf '\033[1;33m[start]\033[0m %s\n' "$1"; }
+err()  { printf '\033[1;31m[start]\033[0m %s\n' "$1" >&2; }
+
+tcp_port_open() {
+  (exec 3<>"/dev/tcp/localhost/$1") 2>/dev/null
+}
+
+wait_for_tcp() {
+  local port=$1 name=$2 tries=${3:-30}
+  log "Waiting for $name on port $port..."
+  for ((i = 0; i < tries; i++)); do
+    if tcp_port_open "$port"; then
+      log "$name is up."
+      return 0
+    fi
+    sleep 2
+  done
+  err "$name did not come up on port $port after $((tries * 2))s. Check $LOG_DIR/."
+  return 1
+}
+
+wait_for_http() {
+  local url=$1 name=$2 tries=${3:-30}
+  log "Waiting for $name ($url)..."
+  for ((i = 0; i < tries; i++)); do
+    if curl -sf "$url" -o /dev/null; then
+      log "$name is up."
+      return 0
+    fi
+    sleep 2
+  done
+  err "$name did not respond at $url after $((tries * 2))s. Check 'docker compose logs' in infra/."
+  return 1
+}
+
+pid_alive() {
+  [[ -f "$1" ]] && kill -0 "$(cat "$1")" 2>/dev/null
+}
+
+start_background() {
+  local name=$1 pid_file=$2 log_file=$3
+  shift 3
+  if pid_alive "$pid_file"; then
+    warn "$name already running (pid $(cat "$pid_file")) — leaving it as is."
+    return 0
+  fi
+  log "Starting $name (first run can take a while — restoring/building)..."
+  "$@" >"$log_file" 2>&1 &
+  local pid=$!
+  echo "$pid" >"$pid_file"
+  STARTED_PID_FILES+=("$pid_file")
+}
+
+cleanup() {
+  [[ ${#STARTED_PID_FILES[@]} -eq 0 ]] && return
+  log "Stopping services started by this run..."
+  for pid_file in "${STARTED_PID_FILES[@]}"; do
+    [[ -f "$pid_file" ]] || continue
+    local pid
+    pid=$(cat "$pid_file")
+    kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+    rm -f "$pid_file"
+  done
+}
+trap cleanup EXIT INT TERM
+
+if [[ ! -f infra/.env ]]; then
+  err "infra/.env is missing — create it first (see infra/docker-compose.yml for the required variables)."
+  exit 1
+fi
+
+log "Starting Docker infra (collections-db, keycloak-db, keycloak)..."
+(cd infra && docker compose up -d)
+
+wait_for_tcp "$COLLECTIONS_DB_PORT" "collections-db"
+wait_for_http "http://localhost:${KEYCLOAK_PORT}/realms/project/.well-known/openid-configuration" "Keycloak (realm project)" 60
+
+start_background "collections-service" "$PID_DIR/collections-service.pid" "$LOG_DIR/collections-service.log" \
+  dotnet run --project "$COLLECTIONS_SERVICE_PROJECT"
+wait_for_tcp "$COLLECTIONS_SERVICE_PORT" "collections-service"
+
+start_background "gateway" "$PID_DIR/gateway.pid" "$LOG_DIR/gateway.log" \
+  dotnet run --project "$GATEWAY_PROJECT"
+wait_for_tcp "$GATEWAY_PORT" "gateway"
+
+log "Backend is up — collections-service: http://localhost:${COLLECTIONS_SERVICE_PORT}, gateway: http://localhost:${GATEWAY_PORT}"
+log "Logs: $LOG_DIR/*.log"
+log "Starting the Expo dev server for mobile/ (Ctrl+C stops everything this script started)..."
+(cd mobile && npx expo start)
