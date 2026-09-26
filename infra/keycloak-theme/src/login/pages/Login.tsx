@@ -3,7 +3,7 @@
  * Renders standard login form plus conditional passkey authenticator section.
  */
 import { useState } from "react";
-import { Eye, EyeSlash, WarningCircle } from "@phosphor-icons/react";
+import { Check, Eye, EyeSlash, WarningCircle } from "@phosphor-icons/react";
 import { kcSanitize } from "keycloakify/lib/kcSanitize";
 import { useIsPasswordRevealed } from "keycloakify/tools/useIsPasswordRevealed";
 import { clsx } from "keycloakify/tools/clsx";
@@ -121,7 +121,16 @@ export default function Login(props: PageProps<Extract<KcContext, { pageId: "log
           <div className="kc-options-row">
             {realm.rememberMe && !usernameHidden && (
               <label className="kc-checkbox">
-                <input id="rememberMe" name="rememberMe" type="checkbox" defaultChecked={!!login.rememberMe} />
+                <span className="kc-checkbox-box">
+                  <input
+                    id="rememberMe"
+                    name="rememberMe"
+                    type="checkbox"
+                    className="kc-checkbox-input"
+                    defaultChecked={!!login.rememberMe}
+                  />
+                  <Check size={12} weight="bold" className="kc-checkbox-check" aria-hidden />
+                </span>
                 {msg("rememberMe")}
               </label>
             )}

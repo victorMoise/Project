@@ -216,38 +216,42 @@ body {
   color: var(--color-text-primary);
 }
 
-.kc-checkbox input {
-  appearance: none;
-  display: inline-grid;
-  place-content: center;
+/* Real checkbox input for interaction/accessibility, visually hidden;
+   the box and checkmark are a decorative sibling/icon so we get a crisp
+   Phosphor glyph instead of a hand-drawn shape. */
+.kc-checkbox-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   width: 18px;
   height: 18px;
-  margin: 0;
   background: var(--color-surface);
   border: 1px solid var(--color-input-border);
   border-radius: var(--radius-sm);
-  cursor: pointer;
 }
 
-.kc-checkbox input:checked {
+.kc-checkbox-box:has(.kc-checkbox-input:checked) {
   background: var(--color-accent);
   border-color: var(--color-accent);
 }
 
-/* Checkmark as a clip-path polygon (not a rotated border): its shape is
-   defined in percentages of the ::after box, so it's centered by the
-   parent's `place-content: center` and stays proportional at any size. */
-.kc-checkbox input::after {
-  content: "";
-  width: 10px;
-  height: 10px;
-  background: var(--color-text-on-accent);
-  clip-path: polygon(14% 44%, 0% 65%, 43% 100%, 100% 21%, 80% 0%, 43% 62%);
+.kc-checkbox-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
   opacity: 0;
+  cursor: pointer;
 }
 
-.kc-checkbox input:checked::after {
+.kc-checkbox-check {
+  color: var(--color-text-on-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kc-checkbox-input:checked + .kc-checkbox-check {
   opacity: 1;
 }
 
