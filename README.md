@@ -12,8 +12,9 @@ Platformă personală modulară (proiect de învățare: backend, baze de date, 
 ## Structură
 - `services/collections-service/` — primul modul: tracker de colecții personale (vinuri, LEGO, cărți de joc etc.)
 - `services/gateway/` — API gateway (YARP)
-- `mobile/` — aplicația React Native (Expo Router), login Keycloak PKCE
-- `infra/` — Docker Compose, configurare Keycloak
+- `mobile/` — aplicația React Native (Expo Router), login Keycloak PKCE, theming runtime
+- `packages/design-tokens/` — sursă unică de adevăr pentru teme (Style Dictionary)
+- `infra/` — Docker Compose, configurare Keycloak, temă custom de login (`keycloak-theme/`)
 
 ## Rulare locală
 ```
@@ -27,5 +28,6 @@ Platformă personală modulară (proiect de învățare: backend, baze de date, 
 - `collections-service` — CRUD complet pentru `Item` și `Collection`, autentificare JWT (Keycloak), validare, exception handling global, CI (GitHub Actions)
 - `gateway` — rutare funcțională către `collections-service`, CI (GitHub Actions)
 - `mobile/` — Expo Router, login Keycloak PKCE (`expo-auth-session`), apel autentificat către gateway
+- Theming — teme multiple, comutabile la runtime, cu aceeași identitate vizuală pe pagina de login Keycloak și în `mobile/` (sursă unică: `packages/design-tokens`), zero literali de culoare hardcodați (impus prin ESLint/Stylelint/CI)
 
 Detalii complete de arhitectură și convenții de cod: [CLAUDE.md](CLAUDE.md)
