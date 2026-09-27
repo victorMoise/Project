@@ -9,11 +9,13 @@ type DateFieldProps = {
   label: string;
   value: Date;
   onChange: (date: Date) => void;
+  error?: string;
 };
 
-export function DateField({ label, value, onChange }: DateFieldProps) {
+export function DateField({ label, value, onChange, error }: DateFieldProps) {
   const theme = useTheme();
   const [isPickerVisible, setIsPickerVisible] = useState(Platform.OS === 'ios');
+  const hasError = !!error;
 
   return (
     <View style={{ gap: spacing.xs }}>
@@ -26,8 +28,8 @@ export function DateField({ label, value, onChange }: DateFieldProps) {
           onPress={() => setIsPickerVisible(true)}
           style={{
             backgroundColor: theme.colors.surface,
-            borderWidth: 1,
-            borderColor: theme.colors.inputBorder,
+            borderWidth: hasError ? 2 : 1,
+            borderColor: hasError ? theme.colors.danger : theme.colors.inputBorder,
             borderRadius: radius.md,
             borderCurve: 'continuous' as const,
             paddingHorizontal: spacing.md,
@@ -54,6 +56,11 @@ export function DateField({ label, value, onChange }: DateFieldProps) {
             }
           }}
         />
+      )}
+      {hasError && (
+        <ThemedText variant="caption" color="danger" selectable>
+          {error}
+        </ThemedText>
       )}
     </View>
   );

@@ -38,6 +38,19 @@ const COLOR_LITERAL_REGEX = `^(?:#(?:[0-9a-fA-F]{3,4}){1,2}|(?:rgb|rgba|hsl|hsla
 module.exports = defineConfig([
   expoConfig,
   {
+    // Inline eslint-disable comments are never an acceptable way to satisfy
+    // React's hooks rules in this project (see CLAUDE.md) -- restructure the
+    // code instead (e.g. mutate a Reanimated shared value inside an effect,
+    // not inside a useCallback; call handleSubmit() at press time, not
+    // precomputed during render). This makes any future eslint-disable a
+    // no-op instead of silently working, so CI (`npx expo lint`) still fails
+    // on the underlying rule.
+    linterOptions: {
+      noInlineConfig: true,
+      reportUnusedDisableDirectives: "error",
+    },
+  },
+  {
     plugins: { "react-native": reactNative },
     rules: {
       "react-native/no-color-literals": "error",

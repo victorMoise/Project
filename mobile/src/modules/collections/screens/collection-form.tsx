@@ -1,61 +1,47 @@
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { z } from 'zod';
 
-import { ApiError } from '@/api/client';
-import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
-import { TextField } from '@/components/text-field';
+import { defineForm, FormWizard } from '@/components/form';
 import { useCreateCollectionMutation } from '@/modules/collections/hooks/use-collections';
-import { spacing } from '@/theme';
+
+const collectionFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required.').max(200, 'Name must be 200 characters or fewer.'),
+  description: z
+    .string()
+    .max(1000, 'Description must be 1000 characters or fewer.')
+    .transform((value) => (value.trim() ? value.trim() : null)),
+});
+
+const collectionFormConfig = defineForm({
+  schema: collectionFormSchema,
+  submitLabel: 'Create collection',
+  steps: [
+    {
+      id: 'name',
+      title: 'How should this collection be called?',
+      sectionTitle: 'Name',
+      fields: [{ name: 'name', kind: 'text', label: 'Name', placeholder: 'e.g. Vintage wines' }],
+    },
+    {
+      id: 'details',
+      title: 'Anything worth noting about it?',
+      sectionTitle: 'Details',
+      optional: true,
+      fields: [{ name: 'description', kind: 'multiline', label: 'Description', optional: true, placeholder: 'Optional notes' }],
+    },
+  ],
+});
 
 export function CollectionForm() {
   const router = useRouter();
   const createCollection = useCreateCollectionMutation();
-  const [name, setName] = useState('');
-  const [error, setError] = useState<string | undefined>();
-
-  function handleSave() {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setError('Name is required.');
-      return;
-    }
-    if (trimmed.length > 200) {
-      setError('Name must be 200 characters or fewer.');
-      return;
-    }
-
-    createCollection.mutate(
-      { name: trimmed },
-      {
-        onSuccess: () => router.back(),
-        onError: (err) => {
-          const fieldError = err instanceof ApiError ? err.problem?.errors?.Name?.[0] : undefined;
-          setError(fieldError ?? (err instanceof Error ? err.message : 'Something went wrong.'));
-        },
-      }
-    );
-  }
 
   return (
-    <Screen edges={['bottom']}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ padding: spacing.md, gap: spacing.md }} keyboardShouldPersistTaps="handled">
-          <TextField
-            label="Name"
-            value={name}
-            onChangeText={(text) => {
-              setName(text);
-              setError(undefined);
-            }}
-            error={error}
-            placeholder="e.g. Vintage wines"
-            autoFocus
-          />
-          <Button title="Create collection" onPress={handleSave} loading={createCollection.isPending} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Screen>
+    <FormWizard
+      config={collectionFormConfig}
+      defaultValues={{ name: '', description: '' }}
+      onSubmit={(values) => createCollection.mutateAsync(values)}
+      onSuccess={() => router.back()}
+    />
   );
 }
