@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { Alert, Pressable } from 'react-native';
 import { Link } from 'expo-router';
 
 import { ListDivider, ListRow } from '@/components/list-row';
@@ -11,6 +11,13 @@ export function Settings() {
   const theme = useTheme();
   const { signOut } = useAuth();
 
+  function confirmSignOut() {
+    Alert.alert('Sign out?', "You'll need to sign in again to use the app.", [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: signOut },
+    ]);
+  }
+
   return (
     <Screen edges={['bottom']}>
       <Link href="/settings/theme" asChild>
@@ -19,7 +26,7 @@ export function Settings() {
       <ListDivider />
       <Pressable
         accessibilityRole="button"
-        onPress={signOut}
+        onPress={confirmSignOut}
         style={(state) => ({
           paddingVertical: spacing.sm,
           paddingHorizontal: spacing.md,
