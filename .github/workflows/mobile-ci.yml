@@ -1,0 +1,36 @@
+name: Mobile CI
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/mobile-ci.yml"
+  push:
+    branches: [develop]
+    paths:
+      - "mobile/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # --legacy-peer-deps: the known react-dom/react peer conflict from
+      # Expo SDK 57's pinned React version (react-dom is an optional peer
+      # for the web/DOM target this app doesn't use). See CLAUDE.md.
+      - run: npm ci --legacy-peer-deps
+
+      - run: npx expo lint
+
+      - run: npx tsc --noEmit
+
+      - run: npx expo-doctor

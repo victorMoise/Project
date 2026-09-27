@@ -23,6 +23,7 @@ Primul modul, în lucru: tracker de colecții personale (`services/collections-s
 | Gateway | YARP, `services/gateway/` — proiect single (fără Clean Architecture layers, nu are logică de business). Rutare prefixată cu numele serviciului (`/collections-service/{**catch-all}` → strip prefix → `collections-service`), ca să nu coliziune cu rutele viitoarelor servicii |
 | Git hosting + CI/CD | GitHub, repo public (runnere macOS gratuite nelimitat pentru iOS) |
 | Testare API | Postman, colecție unică `Project`, foldere per serviciu |
+| Theming | Sursă unică de adevăr: `packages/design-tokens` (Style Dictionary, tokeni DTCG în `tokens/base` + `tokens/themes/<id>`) → generează CSS custom properties pentru `infra/keycloak-theme` (Keycloakify 11, React+Vite, `doUseDefaultCss={false}`) și TS pentru `mobile/` (`ThemeProvider` runtime + `AsyncStorage`). Regulă fermă: zero literali de culoare oriunde în afara `packages/design-tokens/tokens/**` — vezi „Reguli de cod". Necesită Maven local (jar-ul temei Keycloak se pachetează prin Maven sub `keycloakify build`) |
 
 ## Reguli de cod (aplică mereu, fără să întrebi)
 
@@ -39,6 +40,7 @@ Primul modul, în lucru: tracker de colecții personale (`services/collections-s
 - Migrațiile EF Core se creează manual (`dotnet ef migrations add <Nume>`), dar se aplică automat la pornire, doar în Development, prin `db.Database.Migrate()` în `Program.cs`. Nu rula `dotnet ef database update` manual.
 - Folosește proactiv skill-urile `dotnet-skills` (instalate ca plugin) — înainte de a scrie cod .NET nou și/sau ca verificare după, nu doar când se cere explicit. `slopwatch` (`.config/dotnet-tools.json`, local tool) rulează automat după fiecare `Write`/`Edit`/`MultiEdit` printr-un hook `PostToolUse` în `.claude/settings.json` (`dotnet slopwatch analyze -d . --hook`), pe lângă orice verificare manuală cu skill-urile relevante. Baseline: `.slopwatch/baseline.json` (gol la 2026-08-29 — codul era deja curat).
 - Skill-ul `react-native-best-practices` (Software Mansion) — instalat local la rădăcina monorepo-ului prin `npx skills add software-mansion-labs/skills --skill react-native-best-practices`, nu ca plugin Claude Code. Fișierele instalate (`.agents/skills/`, `.claude/skills/`, `skills-lock.json`) sunt gitignored — tooling pentru asistent, nu cod de proiect — deci se reinstalează cu aceeași comandă pe orice checkout nou (inclusiv a doua mașină de lucru).
+- Zero literali de culoare hardcodați, oriunde (TS/TSX, CSS, `app.config.ts`, SVG-uri) — în afara `packages/design-tokens/tokens/**` (sursa de adevăr) și a fișierelor generate din ele. Excepții permise: `transparent`, `currentColor`, `inherit`. Aplicat prin `mobile/eslint.config.js` (`react-native/no-color-literals` + `no-restricted-syntax`), `infra/keycloak-theme/stylelint.config.js` (`color-no-hex`, `color-named`, `function-disallowed-list`) și plasa repo-wide `scripts/check-color-literals.sh`. Pentru o temă nouă: copiezi un JSON din `packages/design-tokens/tokens/themes/`, schimbi `id`/`name`/valorile, rulezi `npm run tokens:build` (regenerează CSS-ul Keycloak și TS-ul mobil, verifică automat contrastul) — vezi `packages/design-tokens/README.md`.
 - Branch-uri: `main` și `develop` protejate (require PR, block force pushes, restrict deletions). Orice modificare trece prin `feature/<nume-descriptiv>` → PR către `develop` → merge → șterge branch-ul (remote și local).
 - Commit-uri: Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`).
 
@@ -49,10 +51,17 @@ Project/
 ├── services/
 │   ├── collections-service/   (Clean Architecture, vezi mai jos)
 │   └── gateway/                (Gateway.slnx, global.json, src/Gateway.Api/ — proiect single, YARP, fără Directory.Build.props/Packages.props încă, nu are sens cu un singur proiect/pachet)
-├── mobile/                     (Expo/React Native, TypeScript, SDK 57, Expo Router — `src/app/` rute, `src/{screens,components,context,hooks,utils}/`; login Keycloak PKCE făcut 2026-09-26; redenumit din `ios/` la 2026-08-29)
-└── infra/
-    ├── docker-compose.yml
-    └── .env                     (gitignored — parole reale)
+├── mobile/                     (Expo/React Native, TypeScript, SDK 57, Expo Router — `src/app/` rute, `src/{screens,components,context,hooks,utils,theme}/`; login Keycloak PKCE făcut 2026-09-26; theming runtime (`ThemeProvider`, `src/theme/generated/**`) făcut 2026-09-27; redenumit din `ios/` la 2026-08-29)
+├── packages/
+│   └── design-tokens/          (Style Dictionary — sursa unică de adevăr pentru culori/spacing/typography/radius; `tokens/base` + `tokens/themes/<id>`, `npm run tokens:build` generează `mobile/src/theme/generated/**` și `infra/keycloak-theme/src/theme/generated/**`; vezi README-ul pachetului)
+├── infra/
+│   ├── docker-compose.yml
+│   ├── .env                    (gitignored — parole reale)
+│   ├── keycloak/
+│   │   └── configure-realm.sh  (idempotent — loginTheme, displayName, i18n en+ro)
+│   └── keycloak-theme/         (Keycloakify 11, React+Vite — temă custom de login, fără PatternFly (`doUseDefaultCss={false}`); vezi README-ul pachetului)
+└── scripts/
+    └── check-color-literals.sh (plasă de siguranță repo-wide pentru regula „zero literali de culoare")
 ```
 
 `collections-service`: rădăcina soluției are `global.json`, `Directory.Build.props`, `Directory.Packages.props` (vezi Reguli de cod). `CollectionsService.Api` (Controllers, Program.cs, DependencyInjection.cs cu `AddApi()`, `ExceptionHandling/`, `Services/`), `CollectionsService.Application` (DependencyInjection.cs, `Common/` cu `ICurrentUserService` și `Behaviors/ValidationBehavior`, `Items/` cu `IItemRepository`, `ItemDto`, `Commands/`, `Queries/`), `CollectionsService.Domain` (`Entities/Item.cs`), `CollectionsService.Infrastructure` (DependencyInjection.cs, `Migrations/`, `Persistence/CollectionsDbContext.cs`, `Persistence/Repositories/`), `tests/` (gol încă).
@@ -79,6 +88,7 @@ Project/
 
    Testat pe telefon fizic (Expo Go) — găsit și rezolvat (2026-09-26): pe device fizic, `localhost` din `.env` înseamnă telefonul, nu Mac-ul — trebuie IP-ul din LAN al mașinii de dev. Consecință mai puțin evidentă: Keycloak (`start-dev`, fără `KC_HOSTNAME` fixat) pune în `iss` al token-ului exact hostname-ul cu care a fost apelat — dacă telefonul cere token prin IP-ul LAN dar `collections-service` validează `Keycloak:Authority` contra `localhost`, JWT-ul e respins ca issuer invalid. Fix: `EXPO_PUBLIC_KEYCLOAK_ISSUER`/`EXPO_PUBLIC_GATEWAY_URL` din `mobile/.env` **și** `Keycloak:Authority` din `appsettings.Development.json` (collections-service, gitignored) trebuie să folosească același host — `localhost` când testezi doar din Simulator/Postman de pe Mac, IP-ul LAN al mașinii când testezi pe telefon fizic. Nu e o soluție permanentă, doar convenția curentă de dev local — de revizuit dacă devine incomod (ex. `KC_HOSTNAME` fixat pe un nume mDNS `.local`, stabil indiferent de rețea).
 10. MinIO pentru poze la itemi (neurgent).
+11. ~~Temă custom Keycloak + theming runtime în `mobile/`~~ — făcut (2026-09-27), vezi `docs/plans/themeable-login-plan.md`. Sursă unică de adevăr: `packages/design-tokens` (Style Dictionary, DTCG), generează CSS pentru Keycloak și TS pentru mobil, cu verificare de contrast automată la build. `infra/keycloak-theme`: Keycloakify 11, toate paginile de auth atinse de realm (login, register, reset-password, info, error, login-update-password, login-page-expired, logout-confirm) custom-stilizate, fără PatternFly; `login-update-profile.ftl`/`update-email.ftl`/`idp-review-user-profile.ftl` rămân nestilizate (cad pe componentele stock Keycloakify) — cunoscut, low-risk, neatinse de configurația curentă a realm-ului. `mobile/`: `ThemeProvider` runtime (`src/theme/`), persistență `AsyncStorage`, primitive (`ThemedText`, `Button`, `Screen`), ecran de alegere a temei, `ui_theme` trimis la Keycloak prin `expo-auth-session` (`sessionStorage`/query fallback în bootstrap-ul Vite, necesar fiindcă parametrul se pierde după prima randare). Regulă „zero literali de culoare" aplicată prin ESLint/Stylelint/`check-color-literals.sh` + 3 CI noi (`design-tokens-ci.yml`, `mobile-ci.yml`, `keycloak-theme-ci.yml`), neobligatorii încă. Deviere documentată: niciun parser ESLint TS-aware pentru `keycloak-theme` (`typescript-eslint`/`@babel/eslint-parser` nu ajung încă la combinația `TypeScript 7`/`ESLint 10`) — acoperit de `check-color-literals.sh` în loc.
 
 ## Bug rezolvat (istoric)
 
