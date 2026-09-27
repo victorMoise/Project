@@ -2,7 +2,7 @@ import { Pressable } from 'react-native';
 import { Link, Stack } from 'expo-router';
 import { PlusIcon } from 'phosphor-react-native';
 
-import { ItemsByCollection } from '@/screens/items-by-collection';
+import { ItemsByCollection } from '@/modules/collections/screens/items-by-collection';
 import { useTheme } from '@/theme';
 
 export default function UncategorizedItemsScreen() {

@@ -30,14 +30,3 @@ export type CreateItemCommand = {
 };
 
 export type UpdateItemCommand = CreateItemCommand;
-
-export type ListQuery = {
-  limit?: number;
-  offset?: number;
-};
-
-export type ValidationProblem = {
-  status: number;
-  title: string;
-  errors?: Record<string, string[]>;
-};

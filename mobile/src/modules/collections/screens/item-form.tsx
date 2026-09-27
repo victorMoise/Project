@@ -3,14 +3,14 @@ import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native'
 import { useRouter } from 'expo-router';
 
 import { ApiError } from '@/api/client';
-import type { ItemDto } from '@/api/types';
+import type { ItemDto } from '@/modules/collections/api/types';
 import { Button } from '@/components/button';
-import { CollectionPicker } from '@/components/collection-picker';
+import { CollectionPicker } from '@/modules/collections/components/collection-picker';
 import { DateField } from '@/components/date-field';
 import { ErrorState } from '@/components/error-state';
 import { Screen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
-import { useCreateItemMutation, useDeleteItemMutation, useItemsQuery, useUpdateItemMutation } from '@/hooks/use-items';
+import { useCreateItemMutation, useDeleteItemMutation, useItemsQuery, useUpdateItemMutation } from '@/modules/collections/hooks/use-items';
 import { spacing } from '@/theme';
 import { parseDateOnly, toDateOnlyString } from '@/utils/format';
 

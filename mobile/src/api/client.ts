@@ -1,5 +1,15 @@
 import { gatewayUrl } from '@/utils/keycloak-config';
-import type { ValidationProblem } from './types';
+
+export type ListQuery = {
+  limit?: number;
+  offset?: number;
+};
+
+export type ValidationProblem = {
+  status: number;
+  title: string;
+  errors?: Record<string, string[]>;
+};
 
 export class ApiError extends Error {
   status: number;

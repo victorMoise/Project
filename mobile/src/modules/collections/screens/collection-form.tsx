@@ -6,7 +6,7 @@ import { ApiError } from '@/api/client';
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
-import { useCreateCollectionMutation } from '@/hooks/use-collections';
+import { useCreateCollectionMutation } from '@/modules/collections/hooks/use-collections';
 import { spacing } from '@/theme';
 
 export function CollectionForm() {

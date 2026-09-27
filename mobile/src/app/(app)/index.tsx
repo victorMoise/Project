@@ -2,7 +2,7 @@ import { Pressable } from 'react-native';
 import { Link, Stack } from 'expo-router';
 import { GearIcon, PlusIcon } from 'phosphor-react-native';
 
-import { CollectionsList } from '@/screens/collections-list';
+import { CollectionsList } from '@/modules/collections/screens/collections-list';
 import { useTheme } from '@/theme';
 
 export default function CollectionsScreen() {

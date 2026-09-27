@@ -1,5 +1,5 @@
-import { apiRequest } from './client';
-import type { CreateItemCommand, ItemDto, ListQuery, UpdateItemCommand } from './types';
+import { apiRequest, type ListQuery } from '@/api/client';
+import type { CreateItemCommand, ItemDto, UpdateItemCommand } from './types';
 
 const BASE = '/collections-service/api/items';
 

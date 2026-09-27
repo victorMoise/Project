@@ -7,8 +7,8 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { ListDivider, ListRow } from '@/components/list-row';
 import { Screen } from '@/components/screen';
-import { useCollectionsQuery, useDeleteCollectionMutation } from '@/hooks/use-collections';
-import { useItemsQuery } from '@/hooks/use-items';
+import { useCollectionsQuery, useDeleteCollectionMutation } from '@/modules/collections/hooks/use-collections';
+import { useItemsQuery } from '@/modules/collections/hooks/use-items';
 import { formatPrice } from '@/utils/format';
 
 export function CollectionsList() {

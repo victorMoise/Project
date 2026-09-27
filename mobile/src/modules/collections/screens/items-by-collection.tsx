@@ -7,7 +7,7 @@ import { EmptyState } from '@/components/empty-state';
 import { ErrorState } from '@/components/error-state';
 import { ListDivider, ListRow } from '@/components/list-row';
 import { Screen } from '@/components/screen';
-import { useDeleteItemMutation, useItemsQuery } from '@/hooks/use-items';
+import { useDeleteItemMutation, useItemsQuery } from '@/modules/collections/hooks/use-items';
 import { formatDate, formatPrice } from '@/utils/format';
 
 type ItemsByCollectionProps = {
