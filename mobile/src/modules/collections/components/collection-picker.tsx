@@ -1,9 +1,9 @@
 import { View } from 'react-native';
 import { Host, Picker } from '@expo/ui';
 
-import { useCollectionsQuery } from '@/hooks/use-collections';
+import { ThemedText } from '@/components/themed-text';
+import { useCollectionsQuery } from '@/modules/collections/hooks/use-collections';
 import { spacing, useTheme } from '@/theme';
-import { ThemedText } from './themed-text';
 
 const UNCATEGORIZED_VALUE = 'uncategorized';
 

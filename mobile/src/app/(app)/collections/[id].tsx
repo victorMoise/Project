@@ -2,8 +2,8 @@ import { Pressable } from 'react-native';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { PlusIcon } from 'phosphor-react-native';
 
-import { useCollectionsQuery } from '@/hooks/use-collections';
-import { ItemsByCollection } from '@/screens/items-by-collection';
+import { useCollectionsQuery } from '@/modules/collections/hooks/use-collections';
+import { ItemsByCollection } from '@/modules/collections/screens/items-by-collection';
 import { useTheme } from '@/theme';
 
 export default function CollectionDetailScreen() {

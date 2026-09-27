@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createItem, deleteItem, listItems, updateItem } from '@/api/items';
-import type { CreateItemCommand, UpdateItemCommand } from '@/api/types';
+import { createItem, deleteItem, listItems, updateItem } from '@/modules/collections/api/items';
+import type { CreateItemCommand, UpdateItemCommand } from '@/modules/collections/api/types';
 import { useAuth } from '@/context/auth-context';
 import { itemsKey } from './query-keys';
 
