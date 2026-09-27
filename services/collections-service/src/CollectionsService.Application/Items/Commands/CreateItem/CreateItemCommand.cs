@@ -7,5 +7,6 @@ public record CreateItemCommand(
     string? Description,
     decimal PurchasePrice,
     DateOnly PurchaseDate,
-    int? CollectionId = null
+    int? CollectionId = null,
+    decimal? EstimatedValue = null
 ) : IRequest<int>;

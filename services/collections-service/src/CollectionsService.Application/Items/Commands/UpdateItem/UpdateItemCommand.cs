@@ -8,5 +8,6 @@ public record UpdateItemCommand(
     string? Description,
     decimal PurchasePrice,
     DateOnly PurchaseDate,
-    int? CollectionId = null
+    int? CollectionId = null,
+    decimal? EstimatedValue = null
 ) : IRequest<bool>;

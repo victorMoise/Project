@@ -13,41 +13,38 @@ public class Item
 
     private Item() { }
 
-    public Item(string name, decimal purchasePrice, DateOnly purchaseDate, Guid ownerId, string? description = null, int? collectionId = null)
+    public Item(string name, decimal purchasePrice, DateOnly purchaseDate, Guid ownerId, string? description = null, int? collectionId = null, decimal? estimatedValue = null)
     {
-        EnsureValid(name, purchasePrice);
+        EnsureValid(name, purchasePrice, estimatedValue);
 
         Name = name;
         Description = description;
         PurchasePrice = purchasePrice;
+        EstimatedValue = estimatedValue;
         PurchaseDate = purchaseDate;
         OwnerId = ownerId;
         CollectionId = collectionId;
     }
 
-    public void UpdateDetails(string name, decimal purchasePrice, DateOnly purchaseDate, string? description = null, int? collectionId = null)
+    public void UpdateDetails(string name, decimal purchasePrice, DateOnly purchaseDate, string? description = null, int? collectionId = null, decimal? estimatedValue = null)
     {
-        EnsureValid(name, purchasePrice);
+        EnsureValid(name, purchasePrice, estimatedValue);
 
         Name = name;
         Description = description;
         PurchasePrice = purchasePrice;
+        EstimatedValue = estimatedValue;
         PurchaseDate = purchaseDate;
         CollectionId = collectionId;
     }
 
-    public void UpdateEstimatedValue(decimal newValue)
-    {
-        if (newValue < 0)
-            throw new ArgumentException("Value cannot be negative", nameof(newValue));
-        EstimatedValue = newValue;
-    }
-
-    private static void EnsureValid(string name, decimal purchasePrice)
+    private static void EnsureValid(string name, decimal purchasePrice, decimal? estimatedValue)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Name cannot be empty", nameof(name));
         if (purchasePrice < 0)
             throw new ArgumentException("Price cannot be negative", nameof(purchasePrice));
+        if (estimatedValue < 0)
+            throw new ArgumentException("Value cannot be negative", nameof(estimatedValue));
     }
 }
