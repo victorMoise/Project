@@ -1,3 +1,3 @@
 namespace CollectionsService.Application.Collections;
 
-public record CollectionDto(int Id, string Name);
+public record CollectionDto(int Id, string Name, string? Description);

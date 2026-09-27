@@ -11,6 +11,6 @@ public class GetCollectionByIdHandler(ICollectionRepository repository, ICurrent
         if (collection is null)
             return null;
 
-        return new CollectionDto(collection.Id, collection.Name);
+        return new CollectionDto(collection.Id, collection.Name, collection.Description);
     }
 }

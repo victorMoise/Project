@@ -11,7 +11,13 @@ public class UpdateItemHandler(IItemRepository repository, ICurrentUserService c
         if (item is null)
             return false;
 
-        item.UpdateDetails(request.Name, request.PurchasePrice, request.PurchaseDate, request.Description, request.CollectionId);
+        item.UpdateDetails(
+            request.Name,
+            request.PurchasePrice,
+            request.PurchaseDate,
+            description: request.Description,
+            collectionId: request.CollectionId,
+            estimatedValue: request.EstimatedValue);
         await repository.SaveChangesAsync(cancellationToken);
         return true;
     }

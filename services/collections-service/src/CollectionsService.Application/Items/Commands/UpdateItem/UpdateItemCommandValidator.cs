@@ -11,6 +11,7 @@ public class UpdateItemCommandValidator : AbstractValidator<UpdateItemCommand>
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
         RuleFor(x => x.Description).MaximumLength(1000);
         RuleFor(x => x.PurchasePrice).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.EstimatedValue).GreaterThanOrEqualTo(0).When(x => x.EstimatedValue.HasValue);
         RuleFor(x => x.CollectionId)
             .MustAsync(async (collectionId, cancellationToken) =>
                 await collectionRepository.GetByIdAsync(collectionId!.Value, currentUserService.OwnerId, cancellationToken) is not null)
