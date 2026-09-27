@@ -26,11 +26,12 @@ jobs:
 
       # keycloakify build packages the theme with Maven -- ubuntu-latest
       # ships Maven preinstalled alongside the JDK setup-java configures.
-      - uses: actions/setup-java@v4
+      # No cache: maven -- keycloakify generates pom.xml on the fly during
+      # the build, so there's none checked in for setup-java to hash yet.
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "23"
-          cache: maven
 
       - run: npm ci
 
