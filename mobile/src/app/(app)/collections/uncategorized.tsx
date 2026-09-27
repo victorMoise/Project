@@ -12,7 +12,6 @@ export default function UncategorizedItemsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Uncategorized',
           headerRight: () => (
             <Link href="/items/new" asChild>
               <Pressable accessibilityRole="button" accessibilityLabel="New item" hitSlop={8}>

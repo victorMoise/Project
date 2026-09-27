@@ -12,7 +12,6 @@ export default function CollectionsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: 'Collections',
           headerLeft: () => (
             <Link href="/settings" asChild>
               <Pressable accessibilityRole="button" accessibilityLabel="Settings" hitSlop={8}>
