@@ -42,12 +42,15 @@ export function DateField({ label, value, onChange }: DateFieldProps) {
           mode="date"
           display={Platform.OS === 'ios' ? 'compact' : 'default'}
           maximumDate={new Date()}
-          onChange={(_event, date) => {
+          onValueChange={(_event, date) => {
             if (Platform.OS === 'android') {
               setIsPickerVisible(false);
             }
-            if (date) {
-              onChange(date);
+            onChange(date);
+          }}
+          onDismiss={() => {
+            if (Platform.OS === 'android') {
+              setIsPickerVisible(false);
             }
           }}
         />
