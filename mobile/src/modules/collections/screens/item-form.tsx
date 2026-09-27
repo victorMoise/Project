@@ -1,29 +1,109 @@
-import { useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { z } from 'zod';
 
-import { ApiError } from '@/api/client';
-import type { ItemDto } from '@/modules/collections/api/types';
+import { defineForm, FormPage, FormWizard, type StepConfig } from '@/components/form';
 import { Button } from '@/components/button';
-import { CollectionPicker } from '@/modules/collections/components/collection-picker';
-import { DateField } from '@/components/date-field';
 import { ErrorState } from '@/components/error-state';
 import { Screen } from '@/components/screen';
-import { TextField } from '@/components/text-field';
+import { CollectionPicker } from '@/modules/collections/components/collection-picker';
+import type { ItemDto } from '@/modules/collections/api/types';
 import { useCreateItemMutation, useDeleteItemMutation, useItemsQuery, useUpdateItemMutation } from '@/modules/collections/hooks/use-items';
-import { spacing } from '@/theme';
 import { parseDateOnly, toDateOnlyString } from '@/utils/format';
+
+const priceLikeSchema = (invalidMessage: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, invalidMessage)
+    .refine((value) => Number.isFinite(Number(value)), invalidMessage)
+    .transform((value) => Number(value))
+    .refine((value) => value >= 0, invalidMessage);
+
+const optionalPriceLikeSchema = (invalidMessage: string) =>
+  z
+    .string()
+    .trim()
+    .refine((value) => value === '' || Number.isFinite(Number(value)), invalidMessage)
+    .transform((value) => (value === '' ? null : Number(value)))
+    .refine((value) => value === null || value >= 0, invalidMessage);
+
+const itemFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required.').max(200, 'Name must be 200 characters or fewer.'),
+  purchasePrice: priceLikeSchema('Enter a valid price of 0 or more.'),
+  purchaseDate: z.date(),
+  collectionId: z.number().nullable(),
+  description: z
+    .string()
+    .max(1000, 'Description must be 1000 characters or fewer.')
+    .transform((value) => (value.trim() ? value.trim() : null)),
+  estimatedValue: optionalPriceLikeSchema('Enter a valid value of 0 or more.'),
+});
+
+type ItemFormValues = z.input<typeof itemFormSchema>;
+
+const nameStep: StepConfig<ItemFormValues> = {
+  id: 'name',
+  title: 'What did you add?',
+  sectionTitle: 'Name',
+  fields: [{ name: 'name', kind: 'text', label: 'Name', placeholder: 'e.g. 1998 Barolo Riserva' }],
+};
+
+const purchaseStep: StepConfig<ItemFormValues> = {
+  id: 'purchase',
+  title: 'What did you pay for it?',
+  sectionTitle: 'Purchase',
+  fields: [
+    { name: 'purchasePrice', kind: 'decimal', label: 'Purchase price', placeholder: '0.00' },
+    { name: 'purchaseDate', kind: 'date', label: 'Purchase date' },
+  ],
+};
+
+// Only relevant when editing: moving an item to a different collection.
+// Adding an item always starts from a screen that already knows the
+// collection (a collection's own screen, or "Uncategorized") -- see
+// ItemCreateForm's initialCollectionId, so the wizard never asks for it.
+const collectionStep: StepConfig<ItemFormValues> = {
+  id: 'collection',
+  title: 'Where does it belong?',
+  sectionTitle: 'Collection',
+  fields: [
+    {
+      name: 'collectionId',
+      kind: 'custom',
+      render: ({ value, onChange }) => (
+        <CollectionPicker collectionId={value as number | null} onChange={onChange as (id: number | null) => void} />
+      ),
+    },
+  ],
+};
+
+const detailsStep: StepConfig<ItemFormValues> = {
+  id: 'details',
+  title: 'Anything else worth noting?',
+  sectionTitle: 'Details',
+  optional: true,
+  fields: [
+    { name: 'description', kind: 'multiline', label: 'Description', optional: true, placeholder: 'Optional notes' },
+    { name: 'estimatedValue', kind: 'decimal', label: 'Estimated value', optional: true, placeholder: '0.00' },
+  ],
+};
+
+const itemCreateFormConfig = defineForm({
+  schema: itemFormSchema,
+  submitLabel: 'Add item',
+  steps: [nameStep, purchaseStep, detailsStep],
+});
+
+const itemEditFormConfig = defineForm({
+  schema: itemFormSchema,
+  submitLabel: 'Save changes',
+  steps: [nameStep, purchaseStep, collectionStep, detailsStep],
+});
 
 type ItemFormProps = {
   itemId?: number;
   initialCollectionId?: number | null;
-};
-
-const SERVER_ERROR_FIELD_MAP: Record<string, string> = {
-  Name: 'name',
-  Description: 'description',
-  PurchasePrice: 'purchasePrice',
-  CollectionId: 'collectionId',
 };
 
 export function ItemForm({ itemId, initialCollectionId = null }: ItemFormProps) {
@@ -50,82 +130,55 @@ export function ItemForm({ itemId, initialCollectionId = null }: ItemFormProps) 
     );
   }
 
-  return <ItemFormBody key={itemId ?? 'new'} existing={existing} initialCollectionId={initialCollectionId} />;
+  return existing ? (
+    <ItemEditForm key={existing.id} existing={existing} />
+  ) : (
+    <ItemCreateForm key="new" initialCollectionId={initialCollectionId} />
+  );
 }
 
-function ItemFormBody({ existing, initialCollectionId }: { existing: ItemDto | undefined; initialCollectionId: number | null }) {
+function toDefaultValues(existing: ItemDto | undefined, initialCollectionId: number | null) {
+  return {
+    name: existing?.name ?? '',
+    purchasePrice: existing ? String(existing.purchasePrice) : '',
+    purchaseDate: existing ? parseDateOnly(existing.purchaseDate) : new Date(),
+    collectionId: existing?.collectionId ?? initialCollectionId,
+    description: existing?.description ?? '',
+    estimatedValue: existing?.estimatedValue !== undefined && existing?.estimatedValue !== null ? String(existing.estimatedValue) : '',
+  };
+}
+
+function toCommand(values: z.output<typeof itemFormSchema>) {
+  return {
+    name: values.name,
+    description: values.description,
+    purchasePrice: values.purchasePrice,
+    estimatedValue: values.estimatedValue,
+    purchaseDate: toDateOnlyString(values.purchaseDate),
+    collectionId: values.collectionId,
+  };
+}
+
+function ItemCreateForm({ initialCollectionId }: { initialCollectionId: number | null }) {
   const router = useRouter();
   const createItem = useCreateItemMutation();
+
+  return (
+    <FormWizard
+      config={itemCreateFormConfig}
+      defaultValues={toDefaultValues(undefined, initialCollectionId)}
+      onSubmit={(values) => createItem.mutateAsync(toCommand(values))}
+      onSuccess={() => router.back()}
+    />
+  );
+}
+
+function ItemEditForm({ existing }: { existing: ItemDto }) {
+  const router = useRouter();
   const updateItem = useUpdateItemMutation();
   const deleteItem = useDeleteItemMutation();
 
-  const [name, setName] = useState(existing?.name ?? '');
-  const [description, setDescription] = useState(existing?.description ?? '');
-  const [purchasePrice, setPurchasePrice] = useState(existing ? String(existing.purchasePrice) : '');
-  const [purchaseDate, setPurchaseDate] = useState(existing ? parseDateOnly(existing.purchaseDate) : new Date());
-  const [collectionId, setCollectionId] = useState<number | null>(existing?.collectionId ?? initialCollectionId);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const isSaving = createItem.isPending || updateItem.isPending;
-
-  function validate(): boolean {
-    const nextErrors: Record<string, string> = {};
-    const trimmedName = name.trim();
-    if (!trimmedName) {
-      nextErrors.name = 'Name is required.';
-    } else if (trimmedName.length > 200) {
-      nextErrors.name = 'Name must be 200 characters or fewer.';
-    }
-    if (description.length > 1000) {
-      nextErrors.description = 'Description must be 1000 characters or fewer.';
-    }
-    const parsedPrice = Number(purchasePrice);
-    if (purchasePrice.trim() === '' || !Number.isFinite(parsedPrice) || parsedPrice < 0) {
-      nextErrors.purchasePrice = 'Enter a valid price of 0 or more.';
-    }
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  }
-
-  function handleSave() {
-    if (!validate()) {
-      return;
-    }
-
-    const command = {
-      name: name.trim(),
-      description: description.trim() ? description.trim() : null,
-      purchasePrice: Number(purchasePrice),
-      purchaseDate: toDateOnlyString(purchaseDate),
-      collectionId,
-    };
-
-    const onError = (error: unknown) => {
-      if (error instanceof ApiError && error.problem?.errors) {
-        const mapped: Record<string, string> = {};
-        for (const [key, messages] of Object.entries(error.problem.errors)) {
-          const field = SERVER_ERROR_FIELD_MAP[key];
-          if (field) {
-            mapped[field] = messages[0];
-          }
-        }
-        setErrors(mapped);
-      } else {
-        Alert.alert('Could not save', error instanceof Error ? error.message : 'Something went wrong.');
-      }
-    };
-
-    if (existing) {
-      updateItem.mutate({ id: existing.id, command }, { onSuccess: () => router.back(), onError });
-    } else {
-      createItem.mutate(command, { onSuccess: () => router.back(), onError });
-    }
-  }
-
   function handleDelete() {
-    if (!existing) {
-      return;
-    }
     Alert.alert('Delete item?', `"${existing.name}" will be permanently deleted.`, [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -137,51 +190,12 @@ function ItemFormBody({ existing, initialCollectionId }: { existing: ItemDto | u
   }
 
   return (
-    <Screen edges={['bottom']}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={{ padding: spacing.md, gap: spacing.md }} keyboardShouldPersistTaps="handled">
-          <TextField
-            label="Name"
-            value={name}
-            onChangeText={(text) => {
-              setName(text);
-              setErrors((prev) => ({ ...prev, name: '' }));
-            }}
-            error={errors.name}
-            placeholder="e.g. 1998 Barolo Riserva"
-            autoFocus={!existing}
-          />
-          <TextField
-            label="Description"
-            value={description}
-            onChangeText={(text) => {
-              setDescription(text);
-              setErrors((prev) => ({ ...prev, description: '' }));
-            }}
-            error={errors.description}
-            placeholder="Optional notes"
-            multiline
-            numberOfLines={3}
-          />
-          <TextField
-            label="Purchase price"
-            value={purchasePrice}
-            onChangeText={(text) => {
-              setPurchasePrice(text);
-              setErrors((prev) => ({ ...prev, purchasePrice: '' }));
-            }}
-            error={errors.purchasePrice}
-            placeholder="0.00"
-            keyboardType="decimal-pad"
-          />
-          <DateField label="Purchase date" value={purchaseDate} onChange={setPurchaseDate} />
-          <CollectionPicker collectionId={collectionId} onChange={setCollectionId} />
-          <Button title={existing ? 'Save changes' : 'Add item'} onPress={handleSave} loading={isSaving} />
-          {existing && (
-            <Button variant="ghost" title="Delete item" onPress={handleDelete} loading={deleteItem.isPending} />
-          )}
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </Screen>
+    <FormPage
+      config={itemEditFormConfig}
+      defaultValues={toDefaultValues(existing, null)}
+      onSubmit={(values) => updateItem.mutateAsync({ id: existing.id, command: toCommand(values) })}
+      onSuccess={() => router.back()}>
+      <Button variant="ghost" title="Delete item" onPress={handleDelete} loading={deleteItem.isPending} />
+    </FormPage>
   );
 }
