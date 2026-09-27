@@ -22,7 +22,7 @@ export function ThemePicker() {
   ];
 
   return (
-    <Screen>
+    <Screen edges={['bottom']}>
       <FlatList
         data={rows}
         keyExtractor={(row) => row.preference}

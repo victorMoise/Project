@@ -20,7 +20,7 @@ type Session = {
 
 type AuthContextValue = {
   signIn: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: () => void;
   getAccessToken: () => Promise<string | null>;
   session: Session | null;
   isLoading: boolean;
@@ -104,28 +104,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const signIn = useCallback(async () => {
     codeVerifierRef.current = request?.codeVerifier;
-    await promptAsync();
+    // Ephemeral: this app manages its own session (SecureStore), so it
+    // doesn't need Safari's shared cookie jar for SSO -- and requesting it
+    // is what triggers the OS's "<app> Wants to Use <issuer> to Sign In"
+    // consent prompt on every sign-in *and* every sign-out. Without shared
+    // cookies, Keycloak's login form always renders fresh, which also
+    // fixes the old bug where a leftover SSO cookie skipped straight past
+    // the form on a second sign-in.
+    await promptAsync({ preferEphemeralSession: true });
   }, [promptAsync, request]);
 
-  const signOut = useCallback(async () => {
-    const endSessionEndpoint = discovery?.endSessionEndpoint;
-    const idToken = session?.idToken;
-
-    if (endSessionEndpoint && idToken) {
-      const logoutUrl = `${endSessionEndpoint}?${new URLSearchParams({
-        id_token_hint: idToken,
-        post_logout_redirect_uri: redirectUri,
-      }).toString()}`;
-
-      try {
-        await WebBrowser.openAuthSessionAsync(logoutUrl, redirectUri);
-      } catch {
-        // Best-effort: the local session is cleared below regardless.
-      }
+  const signOut = useCallback(() => {
+    // Best-effort, silent server-side revocation -- fire-and-forget, no
+    // browser UI. With ephemeral sign-in sessions there's no shared cookie
+    // to clear, but the refresh token itself remains valid server-side
+    // until it expires unless explicitly revoked.
+    if (session?.refreshToken && discovery?.revocationEndpoint) {
+      AuthSession.revokeAsync({ token: session.refreshToken, clientId: keycloakConfig.clientId }, discovery).catch(() => {});
     }
-
     setStoredSession(null);
-  }, [discovery, session, redirectUri, setStoredSession]);
+  }, [discovery, session, setStoredSession]);
 
   const getAccessToken = useCallback(async () => {
     if (!session) {

@@ -2,18 +2,30 @@ import { useMemo } from 'react';
 import { Stack } from 'expo-router';
 import { ThemeProvider as NavigationThemeProvider, DefaultTheme, DarkTheme } from 'expo-router/react-navigation';
 import { StatusBar } from 'expo-status-bar';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { SplashScreenController } from '@/components/splash-screen-controller';
 import { AuthProvider, useAuth } from '@/context/auth-context';
 import { ThemeProvider, useTheme, useAppFonts } from '@/theme';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60,
+      retry: 1,
+    },
+  },
+});
+
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppShell />
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppShell />
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
