@@ -8,7 +8,7 @@ public class CreateCollectionHandler(ICollectionRepository repository, ICurrentU
 {
     public async Task<int> Handle(CreateCollectionCommand request, CancellationToken cancellationToken)
     {
-        var collection = new Collection(request.Name, currentUserService.OwnerId);
+        var collection = new Collection(request.Name, currentUserService.OwnerId, request.Description);
         await repository.AddAsync(collection, cancellationToken);
         return collection.Id;
     }

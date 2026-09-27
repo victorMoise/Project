@@ -10,7 +10,7 @@ public class ListCollectionsHandler(ICollectionRepository repository, ICurrentUs
         var collections = await repository.ListAsync(currentUserService.OwnerId, request.Limit, request.Offset, cancellationToken);
 
         return collections
-            .Select(collection => new CollectionDto(collection.Id, collection.Name))
+            .Select(collection => new CollectionDto(collection.Id, collection.Name, collection.Description))
             .ToList();
     }
 }

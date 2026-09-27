@@ -7,5 +7,6 @@ public class UpdateCollectionCommandValidator : AbstractValidator<UpdateCollecti
     public UpdateCollectionCommandValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Description).MaximumLength(1000);
     }
 }

@@ -11,7 +11,7 @@ public class UpdateCollectionHandler(ICollectionRepository repository, ICurrentU
         if (collection is null)
             return false;
 
-        collection.UpdateName(request.Name);
+        collection.UpdateDetails(request.Name, request.Description);
         await repository.SaveChangesAsync(cancellationToken);
         return true;
     }
